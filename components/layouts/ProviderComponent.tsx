@@ -1,6 +1,9 @@
+'use client';
+import store from '@/store';
 import React, { ReactNode, Suspense } from 'react';
 import Loading from './Loading';
 import App from '@/App';
+import { Provider } from 'react-redux';
 
 interface IProps {
     children?: ReactNode;
@@ -8,7 +11,11 @@ interface IProps {
 
 const ProviderComponent = ({ children }: IProps) => {
     return (
-        <App>{children} </App>
+        <Provider store={store}>
+            <Suspense fallback={<Loading />}>
+                <App>{children} </App>
+            </Suspense>
+        </Provider>
     );
 };
 
