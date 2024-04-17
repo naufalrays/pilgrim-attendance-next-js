@@ -13,7 +13,7 @@ import Providers from '@/components/Providers';
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en">
-            <body>
+            <body className='dark:dark'>
                 {/* <Providers> */}
                     <ProviderComponent>{children}</ProviderComponent>
                 {/* </Providers> */}

@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import themeConfig from '@/theme.config';
 
 const initialState = {
-    isDarkMode: false,
+    // isDarkMode: false,
     sidebar: false,
     theme: themeConfig.theme,
     menu: themeConfig.menu,
