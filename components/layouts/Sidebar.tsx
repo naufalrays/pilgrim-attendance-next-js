@@ -5,14 +5,18 @@ import { usePathname } from 'next/navigation';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import IconUsers from '../icon/IconUsers';
 import { toggleSidebar } from '@/store/themeConfigSlice';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import IconCaretsDown from '../icon/IconCaretsDown';
+import IconMenuContacts from '../icon/menu/IconMenuContact';
+import IconMenuUsers from '../icon/menu/IconMenuUsers';
+import { IRootState } from '@/store';
 
 const Sidebar = () => {
     const dispatch = useDispatch();
     const pathname = usePathname();
     const [currentMenu, setCurrentMenu] = useState<string>('');
     const [errorSubMenu, setErrorSubMenu] = useState(false);
+    const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const toggleMenu = (value: string) => {
         setCurrentMenu((oldValue) => {
             return oldValue === value ? '' : value;
@@ -38,9 +42,9 @@ const Sidebar = () => {
 
     useEffect(() => {
         setActiveRoute();
-        // if (window.innerWidth < 1024 && themeConfig.sidebar) {
-        //     dispatch(toggleSidebar());
-        // }
+        if (window.innerWidth < 1024 && themeConfig.sidebar) {
+            dispatch(toggleSidebar());
+        }
     }, [pathname]);
 
     const setActiveRoute = () => {
@@ -85,8 +89,16 @@ const Sidebar = () => {
                                     <li className="nav-item">
                                         <Link href="/jamaah" className="group">
                                             <div className="flex items-center">
-                                                <IconUsers className="shrink-0 group-hover:!text-primary" />
+                                                <IconMenuUsers className="shrink-0 group-hover:!text-primary" />
                                                 <span className="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">Jamaah</span>
+                                            </div>
+                                        </Link>
+                                    </li>
+                                    <li className="nav-item">
+                                        <Link href="/trip" className="group">
+                                            <div className="flex items-center">
+                                                <IconMenuContacts className="shrink-0 group-hover:!text-primary" />
+                                                <span className="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">Trip</span>
                                             </div>
                                         </Link>
                                     </li>

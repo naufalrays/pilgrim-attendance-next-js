@@ -50,6 +50,10 @@
         @apply scroll-smooth;
     }
 
+    body {
+        @apply bg-[#fafafa] font-nunito;
+    }
+
     body.dark {
         @apply bg-[#060818];
     }

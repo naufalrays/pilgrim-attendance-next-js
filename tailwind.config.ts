@@ -6,6 +6,7 @@ const config: Config = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -55,6 +56,9 @@ const config: Config = {
           dark: "#888ea8",
         },
       },
+      fontFamily: {
+        nunito: ["var(--font-nunito)"],
+      },
       spacing: {
         4.5: "18px",
       },
@@ -67,8 +71,30 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
+      typography: ({ theme }: { theme: any }) => ({
+        DEFAULT: {
+          css: {
+            "--tw-prose-invert-headings": theme("colors.white.dark"),
+            "--tw-prose-invert-links": theme("colors.white.dark"),
+            h1: { fontSize: "40px", marginBottom: "0.5rem", marginTop: 0 },
+            h2: { fontSize: "32px", marginBottom: "0.5rem", marginTop: 0 },
+            h3: { fontSize: "28px", marginBottom: "0.5rem", marginTop: 0 },
+            h4: { fontSize: "24px", marginBottom: "0.5rem", marginTop: 0 },
+            h5: { fontSize: "20px", marginBottom: "0.5rem", marginTop: 0 },
+            h6: { fontSize: "16px", marginBottom: "0.5rem", marginTop: 0 },
+            p: { marginBottom: "0.5rem" },
+            li: { margin: 0 },
+            img: { margin: 0 },
+          },
+        },
+      }),
     },
   },
-  plugins: [],
+  plugins: [
+    require("@tailwindcss/forms")({
+      strategy: "class",
+    }),
+    require("@tailwindcss/typography"),
+  ],
 };
 export default config;

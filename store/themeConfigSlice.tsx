@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import themeConfig from '@/theme.config';
 
 const initialState = {
-    // isDarkMode: false,
+    isDarkMode: false,
     sidebar: false,
     theme: themeConfig.theme,
     menu: themeConfig.menu,
@@ -34,6 +34,28 @@ const themeConfigSlice = createSlice({
     name: 'auth',
     initialState: initialState,
     reducers: {
+        toggleTheme(state, { payload }) {
+            payload = payload || state.theme; // light | dark | system
+            localStorage.setItem('theme', payload);
+            state.theme = payload;
+            if (payload === 'light') {
+                state.isDarkMode = false;
+            } else if (payload === 'dark') {
+                state.isDarkMode = true;
+            } else if (payload === 'system') {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    state.isDarkMode = true;
+                } else {
+                    state.isDarkMode = false;
+                }
+            }
+
+            if (state.isDarkMode) {
+                document.querySelector('body')?.classList.add('dark');
+            } else {
+                document.querySelector('body')?.classList.remove('dark');
+            }
+        },
         toggleMenu(state, { payload }) {
             payload = payload || state.menu; // vertical, collapsible-vertical, horizontal
             localStorage.setItem('menu', payload);
@@ -64,6 +86,6 @@ const themeConfigSlice = createSlice({
     },
 });
 
-export const { toggleMenu, toggleLayout, toggleAnimation, toggleNavbar, toggleSidebar, resetToggleSidebar } = themeConfigSlice.actions;
+export const { toggleTheme, toggleMenu, toggleLayout, toggleAnimation, toggleNavbar, toggleSidebar, resetToggleSidebar } = themeConfigSlice.actions;
 
 export default themeConfigSlice.reducer;

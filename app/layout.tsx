@@ -2,6 +2,7 @@ import '../styles/tailwind.css';
 import { Metadata } from 'next';
 import ProviderComponent from '@/components/layouts/ProviderComponent';
 import Providers from '@/components/Providers';
+import { Nunito } from 'next/font/google';
 
 // export const metadata: Metadata = {
 //     title: {
@@ -10,10 +11,18 @@ import Providers from '@/components/Providers';
 //     },
 // };
 
+const nunito = Nunito({
+    weight: ['400', '500', '600', '700', '800'],
+    subsets: ['latin'],
+    display: 'swap',
+    variable: '--font-nunito',
+});
+
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en">
-            <body className='dark:dark'>
+            <body className={nunito.variable}>
                 {/* <Providers> */}
                     <ProviderComponent>{children}</ProviderComponent>
                 {/* </Providers> */}

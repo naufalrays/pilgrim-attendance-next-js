@@ -10,7 +10,11 @@
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",
+    "@mantine/core": "^5.10.5",
+    "@mantine/hooks": "^5.10.5",
     "@reduxjs/toolkit": "^2.2.3",
+    "lodash": "^4.17.21",
+    "mantine-datatable": "^1.7.35",
     "next": "14.1.4",
     "next-auth": "^4.24.7",
     "react": "^18",
@@ -22,6 +26,9 @@
     "sweetalert2": "^11.10.7"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.13",
+    "@types/lodash": "^4.17.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
