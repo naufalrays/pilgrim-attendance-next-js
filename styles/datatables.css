@@ -95,6 +95,7 @@ table tr .mantine-Checkbox-root {
 }
 
 .mantine-y4ntz3 {
+    background: transparent;
     @apply rounded border border-white-light outline-0 focus:ring-1 focus:ring-white-light/40;
 }
 .mantine-3xbgk5 .mantine-qo1k2 {
