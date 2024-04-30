@@ -5,49 +5,76 @@ import Swal from "sweetalert2";
 import IconX from "@/components/icon/IconX";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/flatpickr.css";
-import IconSearch from "../icon/IconSearch";
-import IconListCheck from "../icon/IconListCheck";
-import IconUserPlus from "../icon/IconUserPlus";
-import IconLayoutGrid from "../icon/IconLayoutGrid";
+import IconSearch from "../../icon/IconSearch";
+import IconListCheck from "../../icon/IconListCheck";
+import IconUserPlus from "../../icon/IconUserPlus";
+import IconLayoutGrid from "../../icon/IconLayoutGrid";
+import { format } from "date-fns";
+import { jamaahService } from "@/app/(default)/user/jamaah/api/api";
+import { useSession } from "next-auth/react";
+import jsPDF from "jspdf";
+import QRCode from "qrcode";
+import { Backend_URL } from "@/lib/Constants";
 
 interface Pilgrim {
-  id?: number;
-  portionNumber: string;
+  id: number;
+  portion_number: string;
   name: string;
   gender: string;
-  birthDate: Date;
-  phoneNumber: string;
+  birth_date: Date;
+  phone_number: string;
   group: string;
   cloter: string;
-  bus: string;
-  passportNumber: string;
+  passport_number: string;
 }
 
 const ComponentsJamaah = () => {
+  const { data } = useSession();
   const [addContactModal, setAddContactModal] = useState<any>(false);
+  const [pilgrims, setPilgrim] = useState<Pilgrim[]>([]);
+  const [filteredItems, setFilteredItems] = useState<any>(pilgrims);
+  const [token, setToken] = useState("");
 
   const [value, setValue] = useState<any>("list");
   const [defaultParams] = useState({
     id: null,
-    portionNumber: "",
+    portion_number: "",
     name: "",
     gender: "",
-    birthDate: "",
-    phoneNumber: "",
+    birth_date: "",
+    phone_number: "",
     group: "",
     cloter: "",
-    bus: "",
-    passportNumber: "",
+    passport_number: "",
   });
 
   const [params, setParams] = useState<any>(
     JSON.parse(JSON.stringify(defaultParams))
   );
 
+  useEffect(() => {
+    const fetchPilgrimData = async () => {
+      try {
+        if (data?.accessToken) {
+          const response = await jamaahService.fetchJamaahData(
+            data.accessToken
+          );
+          setPilgrim(response);
+          setFilteredItems(response);
+          setToken(data?.accessToken);
+        }
+      } catch (error) {
+        console.error("Error fetching trip data:", error);
+      }
+    };
+
+    fetchPilgrimData();
+  }, [data?.accessToken]);
+
   const changeValue = (e: any) => {
     console.log(e);
     if (e[0] instanceof Date) {
-      setParams({ ...params, birthDate: e[0] });
+      setParams({ ...params, birth_date: e[0] });
     } else {
       const { value, id } = e.target;
       setParams({ ...params, [id]: value });
@@ -58,34 +85,36 @@ const ComponentsJamaah = () => {
   const [contactList] = useState<any>([
     {
       id: 1,
-      portionNumber: "091029313",
+      portion_number: "091029313",
       name: "JOhn",
       gender: "M",
-      birthDate: new Date("2022-04-06"),
-      phoneNumber: "08123123123123",
+      birth_date: new Date("2022-04-06"),
+      phone_number: "08123123123123",
       group: "Rombongan 1",
       cloter: "12",
-      bus: "1",
-      passportNumber: "ASD 123123",
+      passport_number: "ASD 123123",
     },
   ]);
 
-  const [filteredItems, setFilteredItems] = useState<any>(contactList);
-
   const searchContact = () => {
+    console.log("asdsa");
     setFilteredItems(() => {
-      return contactList.filter((item: any) => {
+      return pilgrims.filter((item: any) => {
         return item.name.toLowerCase().includes(search.toLowerCase());
       });
     });
+  };
+
+  const formatDate = (date: Date) => {
+    return format(new Date(date), "dd MMMM yyyy");
   };
 
   useEffect(() => {
     searchContact();
   }, [search]);
 
-  const saveUser = () => {
-    if (!params.portionNumber) {
+  const saveUser = async () => {
+    if (!params.portion_number) {
       showMessage("Nomor Porsi dibutuhkan.", "error");
       return true;
     }
@@ -97,17 +126,17 @@ const ComponentsJamaah = () => {
       showMessage("Jenis Kelamin dibutuhkan.", "error");
       return true;
     }
-    if (!params.birthDate) {
+    if (!params.birth_date) {
       showMessage("Tanggal Lahir dibutuhkan.", "error");
       return true;
     }
-    if (!params.phoneNumber) {
+    if (!params.phone_number) {
       showMessage("Nomor telepon dibutuhkan.", "error");
       return true;
     }
 
     const phoneRegex = /^0\d{9,11}$/;
-    if (!phoneRegex.test(params.phoneNumber)) {
+    if (!phoneRegex.test(params.phone_number)) {
       showMessage("Nomor telepon tidak valid", "error");
       return true;
     }
@@ -119,24 +148,25 @@ const ComponentsJamaah = () => {
       showMessage("Kloter dibutuhkan.", "error");
       return true;
     }
-    if (!params.bus) {
-      showMessage("Bis dibutuhkan.", "error");
-      return true;
-    }
     if (params.id) {
-      //update user
-      let user: any = filteredItems.find((d: any) => d.id === params.id);
-      user.portionNumber = params.portionNumber;
-      user.name = params.name;
-      user.gender = params.gender;
-      user.birthDate = params.birthDate;
-      user.phoneNumber = params.phoneNumber;
-      user.group = params.group;
-      user.cloter = params.cloter;
-      user.bus = params.bus;
-      user.passportNumber = params.passportNumber;
+      // update Pilgrim
+      try {
+        await jamaahService.updateJamaah(params.id, params, token);
+        let pilgrim: any = filteredItems.find((d: any) => d.id === params.id);
+        pilgrim.portion_number = params.portion_number;
+        pilgrim.name = params.name;
+        pilgrim.gender = params.gender;
+        pilgrim.birth_date = params.birth_date;
+        pilgrim.phone_number = params.phone_number;
+        pilgrim.group = params.group;
+        pilgrim.cloter = params.cloter;
+        pilgrim.passport_number = params.passport_number;
+        showMessage("Data berhasil diubah");
+      } catch (error) {
+        showMessage("Gagal memperbaharui data", "error");
+      }
     } else {
-      //add user
+      //add Pilgrim
       let maxUserId = filteredItems.length
         ? filteredItems.reduce(
             (max: any, character: any) =>
@@ -145,52 +175,51 @@ const ComponentsJamaah = () => {
           )
         : 0;
 
-      let user = {
-        // id: maxUserId + 1,
-        // path: "profile-35.png",
-        // name: params.name,
-        // email: params.email,
-        // phone: params.phone,
-        // role: params.role,
-        // location: params.location,
-        // posts: 20,
-        // followers: "5K",
-        // following: 500,
+      let pilgrim = {
         id: maxUserId + 1,
-        portionNumber: params.portionNumber,
+        portion_number: params.portion_number,
         name: params.name,
         gender: params.gender,
-        birthDate: params.birthDate,
-        bus: params.bus,
-        phoneNumber: params.phoneNumber,
+        birth_date: params.birth_date,
+        phone_number: params.phone_number,
         group: params.group,
         cloter: params.cloter,
-        passportNumber: params.passportNumber,
-        posts: 20,
-        followers: "5K",
-        following: 500,
+        passport_number: params.passport_number,
       };
-      filteredItems.splice(0, 0, user);
-      //   searchContacts();
+      try {
+        await jamaahService.createJamaah(pilgrim, token);
+        filteredItems.splice(0, 0, pilgrim);
+        showMessage("Data berhasil ditambahkan");
+      } catch (error) {
+        showMessage("Gagal menambahkan data", "error");
+      }
     }
-
-    showMessage("User has been saved successfully.");
+    // showMessage("User has been saved successfully.");
     setAddContactModal(false);
   };
 
-  const editUser = (user: any = null) => {
+  const editUser = (pilgrim: any = null) => {
     const json = JSON.parse(JSON.stringify(defaultParams));
     setParams(json);
-    if (user) {
-      let json1 = JSON.parse(JSON.stringify(user));
+    if (pilgrim) {
+      let json1 = JSON.parse(JSON.stringify(pilgrim));
       setParams(json1);
     }
     setAddContactModal(true);
   };
 
-  const deleteUser = (user: any = null) => {
-    setFilteredItems(filteredItems.filter((d: any) => d.id !== user.id));
-    showMessage("User has been deleted successfully.");
+  const deleteUser = async (id: number) => {
+    if (window.confirm("Apakah kamu yakin ingin menghapus datanya ?")) {
+      if (id) {
+        try {
+          await jamaahService.deleteJamaah(id, token);
+          showMessage("Berhasil menghapus data");
+          setFilteredItems(filteredItems.filter((d: any) => d.id !== id));
+        } catch (error) {
+          showMessage("Gagal menghapus data", "error");
+        }
+      }
+    }
   };
 
   const showMessage = (msg = "", type = "success") => {
@@ -206,6 +235,63 @@ const ComponentsJamaah = () => {
       title: msg,
       padding: "10px 20px",
     });
+  };
+
+  const downloadPDF = async (id: number) => {
+    const doc = new jsPDF({
+      orientation: "p",
+      unit: "cm",
+      format: [8.5, 5.5],
+    });
+    doc.addImage(
+      "/assets/images/pdf-background.png",
+      "PNG",
+      0,
+      0,
+      doc.internal.pageSize.getWidth(),
+      doc.internal.pageSize.getHeight()
+    );
+    // Menghitung posisi horizontal dan vertikal tengah
+    const centerX = doc.internal.pageSize.getWidth() / 2;
+    const centerY = doc.internal.pageSize.getHeight() / 2;
+
+    doc.setTextColor("#ffffff"); // Mengatur warna teks menjadi putih
+    doc.setFontSize(11); // Mengatur ukuran font menjadi 12
+    doc.text("KBIH TARBIS", centerX, 0.6, { align: "center" });
+
+    doc.setTextColor("#000000"); // Mengatur warna teks menjadi hitam
+    doc.setFontSize(6); // Mengatur ukuran font menjadi 12
+    doc.text(pilgrims[id].name, centerX, 5, { align: "center" });
+    doc.text(pilgrims[id].portion_number, centerX, 5.28, { align: "center" });
+
+    var opts: QRCode.QRCodeToDataURLOptions = {
+      errorCorrectionLevel: "H",
+      type: "image/jpeg",
+      margin: 0,
+    };
+
+    const qrCodeDataURL = await QRCode.toDataURL(
+      `${Backend_URL}/pilgrim/${pilgrims[id].portion_number}`,
+      opts
+    );
+    const qrCodeImg = new Image();
+    // qrCodeImg.src = qrCodeDataURL;
+
+    doc.setTextColor("#ffffff"); // Mengatur warna teks menjadi putih
+    doc.setFontSize(3.6); // Mengatur ukuran font menjadi 12
+    doc.addImage(qrCodeDataURL, "JPEG", centerX - 0.7, 5.4, 1.4, 1.4);
+    doc.text(
+      "Jl. Raya Jagakarsa Jl. H. Sa Amah No.45 7, RT.7/RW.4, Jagakarsa, \nKec. Jagakarsa, Kota Jakarta Selatan, DKI Jakarta 12620",
+      centerX,
+      7.8,
+      { align: "center" }
+    );
+    doc.setFontSize(5); // Mengatur ukuran font menjadi 12
+
+    doc.text("Kontak : Abdul Holik Muhidin (+62 8118741217)", centerX, 8.3, {
+      align: "center",
+    });
+    doc.save("a4.pdf");
   };
 
   return (
@@ -274,7 +360,6 @@ const ComponentsJamaah = () => {
                   <th>Nama</th>
                   <th>Jenis Kelamin</th>
                   <th>Tanggal Lahir</th>
-                  <th>Bis</th>
                   <th>No. Telepon</th>
                   <th>Rombongan</th>
                   <th>Kloter</th>
@@ -283,10 +368,10 @@ const ComponentsJamaah = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredItems.map((pilgrim: Pilgrim) => {
+                {filteredItems.map((pilgrim: Pilgrim, index: number) => {
                   return (
                     <tr key={pilgrim.id}>
-                      <td>{pilgrim.portionNumber}</td>
+                      <td>{pilgrim.portion_number}</td>
                       <td>
                         <div>{pilgrim.name}</div>
                       </td>
@@ -294,16 +379,15 @@ const ComponentsJamaah = () => {
                         {pilgrim.gender == "M" ? "Laki-Laki" : "Perempuan"}
                       </td>
                       <td className="whitespace-nowrap">
-                        {pilgrim.birthDate.toDateString()}
+                        {pilgrim ? formatDate(pilgrim.birth_date) : "-"}
                       </td>
-                      <td className="whitespace-nowrap">{pilgrim.bus}</td>
                       <td className="whitespace-nowrap">
-                        {pilgrim.phoneNumber}
+                        {pilgrim.phone_number}
                       </td>
                       <td className="whitespace-nowrap">{pilgrim.group}</td>
                       <td className="whitespace-nowrap">{pilgrim.cloter}</td>
                       <td className="whitespace-nowrap">
-                        {pilgrim.passportNumber}
+                        {pilgrim.passport_number}
                       </td>
                       <td>
                         <div className="flex items-center justify-center gap-4">
@@ -312,14 +396,20 @@ const ComponentsJamaah = () => {
                             className="btn btn-sm btn-outline-primary"
                             onClick={() => editUser(pilgrim)}
                           >
-                            Edit
+                            Ubah
                           </button>
                           <button
                             type="button"
                             className="btn btn-sm btn-outline-danger"
-                            onClick={() => deleteUser(pilgrim)}
+                            onClick={() => deleteUser(pilgrim.id)}
                           >
-                            Delete
+                            Hapus
+                          </button>
+                          <button
+                            className="border border-green-500 rounded-md py-1 px-2 text-green-500 hover:bg-green-500 hover:text-white"
+                            onClick={() => downloadPDF(index)}
+                          >
+                            Unduh PDF
                           </button>
                         </div>
                       </td>
@@ -334,35 +424,35 @@ const ComponentsJamaah = () => {
 
       {value === "grid" && (
         <div className="mt-5 grid w-full grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {filteredItems.map((contact: any) => {
+          {filteredItems.map((pilgrim: any) => {
             return (
               <div
                 className="relative overflow-hidden rounded-md bg-white text-center shadow dark:bg-[#1c232f]"
-                key={contact.id}
+                key={pilgrim.id}
               >
                 <div className="relative overflow-hidden rounded-md bg-white text-center shadow dark:bg-[#1c232f]">
                   <div className="rounded-t-md bg-white/40 bg-[url('/assets/images/notification-bg.png')] bg-cover bg-center p-6 pb-0">
                     <img
                       className="mx-auto max-h-40 w-4/5 object-contain"
-                      src={`/assets/images/${contact.path}`}
+                      src={`/assets/images/${pilgrim.path}`}
                       alt="contact_image"
                     />
                   </div>
                   <div className="relative -mt-10 px-6 pb-24">
                     <div className="rounded-md bg-white px-2 py-4 shadow-md dark:bg-gray-900">
-                      <div className="text-xl">{contact.name}</div>
-                      <div className="text-white-dark">{contact.role}</div>
+                      <div className="text-xl">{pilgrim.name}</div>
+                      <div className="text-white-dark">{pilgrim.role}</div>
                       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex-auto">
-                          <div className="text-info">{contact.posts}</div>
+                          <div className="text-info">{pilgrim.posts}</div>
                           <div>Posts</div>
                         </div>
                         <div className="flex-auto">
-                          <div className="text-info">{contact.following}</div>
+                          <div className="text-info">{pilgrim.following}</div>
                           <div>Following</div>
                         </div>
                         <div className="flex-auto">
-                          <div className="text-info">{contact.followers}</div>
+                          <div className="text-info">{pilgrim.followers}</div>
                           <div>Followers</div>
                         </div>
                       </div>
@@ -373,7 +463,7 @@ const ComponentsJamaah = () => {
                           Email :
                         </div>
                         <div className="truncate text-white-dark">
-                          {contact.email}
+                          {pilgrim.email}
                         </div>
                       </div>
                       <div className="flex items-center">
@@ -381,7 +471,7 @@ const ComponentsJamaah = () => {
                           Phone :
                         </div>
                         <div className="text-white-dark">
-                          {contact.phoneNumber}
+                          {pilgrim.phone_number}
                         </div>
                       </div>
                       <div className="flex items-center">
@@ -389,7 +479,7 @@ const ComponentsJamaah = () => {
                           Address :
                         </div>
                         <div className="text-white-dark">
-                          {contact.location}
+                          {pilgrim.location}
                         </div>
                       </div>
                     </div>
@@ -398,14 +488,14 @@ const ComponentsJamaah = () => {
                     <button
                       type="button"
                       className="btn btn-outline-primary w-1/2"
-                      onClick={() => editUser(contact)}
+                      onClick={() => editUser(pilgrim)}
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       className="btn btn-outline-danger w-1/2"
-                      onClick={() => deleteUser(contact)}
+                      onClick={() => deleteUser(pilgrim.id)}
                     >
                       Delete
                     </button>
@@ -455,18 +545,18 @@ const ComponentsJamaah = () => {
                     <IconX />
                   </button>
                   <div className="bg-[#fbfbfb] py-3 text-lg font-medium ltr:pl-5 ltr:pr-[50px] rtl:pl-[50px] rtl:pr-5 dark:bg-[#121c2c]">
-                    {params.id ? "Edit Contact" : "Tambah Jamaah"}
+                    {params.id ? "Ubah Jamaah" : "Tambah Jamaah"}
                   </div>
                   <div className="p-5">
                     <form>
                       <div className="mb-5">
-                        <label htmlFor="portionNumber">Nomor Porsi</label>
+                        <label htmlFor="portion_number">Nomor Porsi</label>
                         <input
-                          id="portionNumber"
-                          type="portionNumber"
+                          id="portion_number"
+                          type="portion_number"
                           placeholder="Masukkan Nomor Porsi"
                           className="form-input"
-                          value={params.portionNumber}
+                          value={params.portion_number}
                           onChange={(e) => changeValue(e)}
                         />
                       </div>
@@ -497,10 +587,10 @@ const ComponentsJamaah = () => {
                         </select>
                       </div>
                       <div className="mb-5">
-                        <label htmlFor="birthDate">Tanggal Lahir</label>
+                        <label htmlFor="birth_date">Tanggal Lahir</label>
                         <Flatpickr
-                          id="birthDate"
-                          value={params.birthDate}
+                          id="birth_date"
+                          value={params.birth_date}
                           options={{
                             dateFormat: "d-m-Y",
                             position: "auto left",
@@ -513,11 +603,11 @@ const ComponentsJamaah = () => {
                       <div className="mb-5">
                         <label htmlFor="number">Nomor Telepon</label>
                         <input
-                          id="phoneNumber"
+                          id="phone_number"
                           type="text"
                           placeholder="Masukan Nomor Telepon"
                           className="form-input"
-                          value={params.phoneNumber}
+                          value={params.phone_number}
                           onChange={(e) => changeValue(e)}
                         />
                       </div>
@@ -544,25 +634,13 @@ const ComponentsJamaah = () => {
                         />
                       </div>
                       <div className="mb-5">
-                        <label htmlFor="bus">Bis</label>
+                        <label htmlFor="passport_number">Nomor Passport</label>
                         <input
-                          id="bus"
-                          type="number"
-                          placeholder="Masukkan Bis"
-                          min={0}
-                          className="form-input"
-                          value={params.bus}
-                          onChange={(e) => changeValue(e)}
-                        />
-                      </div>
-                      <div className="mb-5">
-                        <label htmlFor="passportNumber">Nomor Passport</label>
-                        <input
-                          id="passportNumber"
+                          id="passport_number"
                           type="text"
                           placeholder="Masukkan Nomor Passport"
                           className="form-input"
-                          value={params.passportNumber}
+                          value={params.passport_number}
                           onChange={(e) => changeValue(e)}
                         />
                       </div>

@@ -1,20 +1,16 @@
 "use client";
-import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import IconX from "../icon/IconX";
 import Flatpickr from "react-flatpickr";
-import { start } from "repl";
 import "flatpickr/dist/flatpickr.css";
 import { DataTableSortStatus, DataTable } from "mantine-datatable";
-import IconEdit from "../icon/IconEdit";
-import IconEye from "../icon/IconEye";
-import IconTrashLines from "../icon/IconTrashLines";
 import { sortBy } from "lodash";
 import IconPlus from "../icon/IconPlus";
 import { User } from "next-auth";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { tripService } from "@/app/(default)/trip/api/api";
+import { useSession } from "next-auth/react";
 
 interface Pilgrim {
   id?: number;
@@ -48,10 +44,13 @@ interface TripRequestData {
   start?: Date;
   end?: Date;
   destination: string;
-  pilgrims?: number[];
+  bus: string;
+  pilgrimsId?: number[];
 }
 
 const ComponentsTripCreate = () => {
+  const { data } = useSession();
+  const [token, setToken] = useState("");
   const router = useRouter();
   const [pilgrimData, setPilgrimData] = useState<Pilgrim[]>([]);
   const [selectedPilgrim, setSelectedPilgrim] = useState<Pilgrim[]>([]);
@@ -59,23 +58,28 @@ const ComponentsTripCreate = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWlubmloMTIzNCIsInN1YiI6eyJuYW1lIjoicmlvIiwicm9sZSI6ImFkbWluIn0sImlhdCI6MTcxNDI2Njk4OSwiZXhwIjoxNzE0MzUzMzg5fQ.qqs6LLUGqMsOJ-DlfZvF_WrbpZh2iQX9b5KjMlGHMqE"; // Replace with your token
+        if (data?.accessToken) {
+          // Fetch pilgrim data
+          const pilgrimData = await tripService.fetchPilgrimData(
+            data?.accessToken
+          );
+          setPilgrimData(pilgrimData);
 
-        // Fetch pilgrim data
-        const pilgrimData = await tripService.fetchPilgrimData(token);
-        setPilgrimData(pilgrimData);
+          // Fetch guide data
+          const guideData = await tripService.fetchPilgrimData(
+            data?.accessToken
+          );
+          setGuideData(guideData);
 
-        // Fetch guide data
-        const guideData = await tripService.fetchPilgrimData(token);
-        setGuideData(guideData);
+          setToken(data?.accessToken);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
 
     fetchData();
-  }, []); // Empty dependency array to run effect only once after initial render
+  }, [data?.accessToken]); // Empty dependency array to run effect only once after initial render
 
   const [records, setRecords] = useState<Pilgrim[]>([]);
 
@@ -107,6 +111,11 @@ const ComponentsTripCreate = () => {
       ]);
 
       setPilgrimData(updatedPilgrimData);
+      if (records.length == 1) {
+        if (page > 1) {
+          setPage(page - 1);
+        }
+      }
       const from = (page - 1) * pageSize;
       const to = from + pageSize;
       setRecords([...updatedPilgrimData.slice(from, to)]);
@@ -118,7 +127,6 @@ const ComponentsTripCreate = () => {
   };
 
   const addSelectedPilgrim = () => {
-    console.log(selectedRecords);
     const selectedPilgrimsToAdd = selectedRecords.map((record: Pilgrim) => {
       return pilgrimData.find(
         (pilgrim) => pilgrim.portion_number === record.portion_number
@@ -139,6 +147,11 @@ const ComponentsTripCreate = () => {
 
     setPilgrimData(updatedPilgrimData);
     setSelectedRecords([]);
+    if (selectedPilgrimsToAdd.length >= records.length) {
+      if (page != 1) {
+        setPage(page - 1);
+      }
+    }
 
     const from = (page - 1) * pageSize;
     const to = from + pageSize;
@@ -195,17 +208,19 @@ const ComponentsTripCreate = () => {
   const [guide, setGuide] = useState("");
   const [meetingPoint, setMeetingPoint] = useState("");
   const [destination, setDestination] = useState("");
+  const [bus, setBus] = useState("");
   const [date, setDate] = useState<Date>();
   const [standByDate, setStandByDate] = useState<Date>();
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
-  Date;
+
   const isFormValid = () => {
     return (
       eventName.trim() !== "" &&
       guide.trim() !== "" &&
       meetingPoint.trim() !== "" &&
       destination.trim() !== "" &&
+      bus.trim() !== "" &&
       date &&
       standByDate &&
       startDate &&
@@ -223,7 +238,7 @@ const ComponentsTripCreate = () => {
     const parsedStartDate = startDate ? new Date(startDate) : undefined;
     const parsedEndDate = endDate ? new Date(endDate) : undefined;
     const tripRequestData: TripRequestData = {
-      picId: 1,
+      picId: parseInt(guide),
       name: eventName,
       date: parsedDate,
       meeting_point: meetingPoint,
@@ -231,29 +246,17 @@ const ComponentsTripCreate = () => {
       start: parsedStartDate,
       end: parsedEndDate,
       destination: destination,
-      pilgrims: pilgrimIds,
+      bus: bus,
+      pilgrimsId: pilgrimIds,
     };
     const createTrip = async () => {
       try {
-        const response = await fetch("http://localhost:8000/trip", {
-          method: "POST",
-          body: JSON.stringify(tripRequestData),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWlubmloMTIzNCIsInN1YiI6eyJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifSwiaWF0IjoxNzE0Mjg3MzA3LCJleHAiOjE3MTQzNzM3MDd9.PwnCYkzlZZECoaKu3i8EO8y_G7l7yA4nkD6YzI_7ssM",
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Gagal menambahkan data");
-        }
+        await tripService.createTrip(tripRequestData, token);
         showMessage("Berhasil menambahkan data");
         const tripPage = "/trip/list";
-
-        router.push("/trip/list");
+        router.push(tripPage);
       } catch (error) {
         showMessage(`${error}`, "error");
-
         console.error("Error fetching trip data:", error);
       }
     };
@@ -353,6 +356,25 @@ const ComponentsTripCreate = () => {
                     className="form-input flex-1"
                     placeholder="Masukkan Destinasi"
                     onChange={(e) => setDestination(e.target.value)}
+                  />
+                </div>
+                <div className="mt-4 flex items-center">
+                  <label htmlFor="bus" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
+                    Bis
+                  </label>
+                  <input
+                   min={0}
+                    id="bus"
+                    type="number"
+                    name="bus"
+                    className="form-input flex-1"
+                    placeholder="Masukkan Nomor Bis"
+                    onChange={(e) => setBus(e.target.value)}
+                    onKeyPress={(event) => {
+                      if (!/[0-9]/.test(event.key)) {
+                          event.preventDefault();
+                      }
+                  }}
                   />
                 </div>
               </div>

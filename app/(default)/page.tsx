@@ -1,4 +1,4 @@
-import ComponentsJamaah from '@/components/jamaah/ComponentsJamaah';
+import ComponentsJamaah from '@/components/user/jamaah/ComponentsJamaah';
 import { Metadata } from 'next';
 import React from 'react';
 

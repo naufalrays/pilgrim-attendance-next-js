@@ -4,32 +4,6 @@ import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { IRootState } from "@/store";
 import { toggleSidebar, toggleTheme } from "@/store/themeConfigSlice";
-// import IconMenu from '@/components/icon/icon-menu';
-// import IconCalendar from '@/components/icon/icon-calendar';
-// import IconEdit from '@/components/icon/icon-edit';
-// import IconChatNotification from '@/components/icon/icon-chat-notification';
-// import IconSearch from '@/components/icon/icon-search';
-// import IconXCircle from '@/components/icon/icon-x-circle';
-// import IconSun from '@/components/icon/icon-sun';
-// import IconMoon from '@/components/icon/icon-moon';
-// import IconLaptop from '@/components/icon/icon-laptop';
-// import IconMailDot from '@/components/icon/icon-mail-dot';
-// import IconArrowLeft from '@/components/icon/icon-arrow-left';
-// import IconInfoCircle from '@/components/icon/icon-info-circle';
-// import IconBellBing from '@/components/icon/icon-bell-bing';
-// import IconUser from '@/components/icon/icon-user';
-// import IconMail from '@/components/icon/icon-mail';
-// import IconLockDots from '@/components/icon/icon-lock-dots';
-// import IconLogout from '@/components/icon/icon-logout';
-// import IconMenuDashboard from '@/components/icon/menu/icon-menu-dashboard';
-// import IconCaretDown from '@/components/icon/icon-caret-down';
-// import IconMenuApps from '@/components/icon/menu/icon-menu-apps';
-// import IconMenuComponents from '@/components/icon/menu/icon-menu-components';
-// import IconMenuElements from '@/components/icon/menu/icon-menu-elements';
-// import IconMenuDatatables from '@/components/icon/menu/icon-menu-datatables';
-// import IconMenuForms from '@/components/icon/menu/icon-menu-forms';
-// import IconMenuPages from '@/components/icon/menu/icon-menu-pages';
-// import IconMenuMore from '@/components/icon/menu/icon-menu-more';
 import { usePathname, useRouter } from "next/navigation";
 import IconMenuMore from "../icon/menu/IconMenuMore";
 import IconMenu from "../icon/IconMenu";
@@ -38,13 +12,25 @@ import IconLogout from "../icon/IconLogout";
 import IconMoon from "../icon/IconMoon";
 import IconLaptop from "../icon/IconLaptop";
 import IconSun from "../icon/IconSun";
+import { useSession } from "next-auth/react";
 
 const Header = () => {
+  const { data } = useSession();
+  const [name, setName] = useState<string>("-");
+  const [username, setUserName] = useState<string>("-");
   const pathname = usePathname();
   const dispatch = useDispatch();
   const router = useRouter();
 
   useEffect(() => {
+    if (data?.accessToken) {
+      const decodedToken = decodeAccessToken(data.accessToken);
+      if (decodedToken && decodedToken.sub && decodedToken.sub.name) {
+        setName(decodedToken.sub.name);
+        setUserName(decodedToken.username)
+      }
+    }
+
     const selector = document.querySelector(
       'ul.horizontal-menu a[href="' + window.location.pathname + '"]'
     );
@@ -74,7 +60,7 @@ const Header = () => {
         }
       }
     }
-  }, [pathname]);
+  }, [pathname, data?.accessToken]);
 
   const isRtl = true;
 
@@ -82,6 +68,21 @@ const Header = () => {
 
   function createMarkup(messages: any) {
     return { __html: messages };
+  }
+
+  function decodeAccessToken(accessToken: string) {
+    const base64Url = accessToken.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map(function (c) {
+          return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join("")
+    );
+
+    return JSON.parse(jsonPayload);
   }
 
   return (
@@ -162,12 +163,12 @@ const Header = () => {
                         alt="userProfile"
                       />
                       <div className="truncate ltr:pl-4 rtl:pr-4">
-                        <h4 className="text-base">John Doe</h4>
+                        <h4 className="text-base">{name}</h4>
                         <button
                           type="button"
                           className="text-black/60 hover:text-primary dark:text-dark-light/60 dark:hover:text-white"
                         >
-                          johndoe@gmail.com
+                        {username}
                         </button>
                       </div>
                     </div>

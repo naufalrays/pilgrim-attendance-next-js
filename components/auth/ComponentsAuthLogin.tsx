@@ -13,6 +13,7 @@ const ComponentsAuthLoginForm = () => {
         e.preventDefault();
         const username = e.currentTarget.Username.value;
         const password = e.currentTarget.Password.value;
+        console.log(`check username ${username}`)
 
         if (!username || !password) {
             setError("Username dan password tidak boleh kosong");

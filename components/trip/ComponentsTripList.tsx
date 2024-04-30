@@ -10,6 +10,8 @@ import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import useSWR from "swr";
 import Swal from "sweetalert2";
+import { tripService } from "@/app/(default)/trip/api/api";
+import { useSession } from "next-auth/react";
 
 interface Trip {
   id: number;
@@ -26,31 +28,26 @@ interface Trip {
 }
 
 const ComponentsTripList = () => {
+  const { data } = useSession();
   const [items, setItems] = useState<Trip[]>([]);
+  const [token, setToken] = useState("");
 
   useEffect(() => {
     const fetchTripData = async () => {
       try {
-        const response = await fetch("http://localhost:8000/trip", {
-          headers: {
-            Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWlubmloMTIzNCIsInN1YiI6eyJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifSwiaWF0IjoxNzE0Mjg3MzA3LCJleHAiOjE3MTQzNzM3MDd9.PwnCYkzlZZECoaKu3i8EO8y_G7l7yA4nkD6YzI_7ssM",
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
+        if (data?.accessToken) {
+          const response = await tripService.fetchTripData(data?.accessToken);
+          setItems(response);
+          setInitialRecords(sortBy(response, "invoice"));
+          setToken(data?.accessToken);
         }
-        const responseData = await response.json();
-        const tripData: Trip[] = responseData.data;
-        setItems(tripData);
-        setInitialRecords(sortBy(tripData, "invoice"));
       } catch (error) {
         console.error("Error fetching trip data:", error);
       }
     };
 
     fetchTripData();
-  }, []);
+  }, [data?.accessToken]);
 
   const [page, setPage] = useState(1);
   const PAGE_SIZES = [10, 20, 30, 50, 100];
@@ -126,34 +123,29 @@ const ComponentsTripList = () => {
 
   const deleteData = async (id: any) => {
     try {
-        const response = await fetch(`http://localhost:8000/trip/${id}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWlubmloMTIzNCIsInN1YiI6eyJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifSwiaWF0IjoxNzE0Mjg3MzA3LCJleHAiOjE3MTQzNzM3MDd9.PwnCYkzlZZECoaKu3i8EO8y_G7l7yA4nkD6YzI_7ssM",
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Gagal menghapus data");
+      await tripService.deleteTrip(id, token);
+      showMessage("Berhasil menghapus data");
+      // CSR
+      setRecords(items.filter((user) => user.id !== id));
+      setInitialRecords(items.filter((user) => user.id !== id));
+      setItems(items.filter((user) => user.id !== id));
+      setSelectedRecords([]);
+      setSearch("");
+      if (records.length == 1) {
+        if (page != 0) {
+          setPage(page - 1);
         }
-        showMessage("Berhasil menghapus data");
-        // CSR
-        setRecords(items.filter((user) => user.id !== id));
-        setInitialRecords(items.filter((user) => user.id !== id));
-        setItems(items.filter((user) => user.id !== id));
-        setSelectedRecords([]);
-        setSearch("");
-      } catch (error) {
-        showMessage(`${error}`, "error");
-        console.error("Error fetching trip data:", error);
       }
-  }
+    } catch (error) {
+      showMessage(`${error}`, "error");
+      console.error("Error fetching trip data:", error);
+    }
+  };
 
   const deleteRow = async (id: any = null) => {
-    if (window.confirm("Are you sure want to delete selected row ?")) {
+    if (window.confirm("Apakah kamu yakin ingin menghapus datanya ?")) {
       if (id) {
-        deleteData(id)
+        await deleteData(id);
       } else {
         let selectedRows = selectedRecords || [];
         const ids = selectedRows.map((d: any) => {

@@ -15,6 +15,7 @@ import { User } from "next-auth";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { tripService } from "@/app/(default)/trip/api/api";
+import { useSession } from "next-auth/react";
 
 interface TripResponseData {
   picId: number;
@@ -26,6 +27,7 @@ interface TripResponseData {
   start?: Date;
   end?: Date;
   destination: string;
+  bus: string;
   pilgrims?: Pilgrim[];
 }
 
@@ -38,7 +40,6 @@ interface Pilgrim {
   phone_number: string;
   group: string;
   cloter: string;
-  bus: string;
   passport_number: string;
 }
 
@@ -53,7 +54,7 @@ interface GuideData {
 }
 
 interface TripRequestData {
-  picId: number;
+  picId?: number;
   name: string;
   date?: Date;
   meeting_point: string;
@@ -61,10 +62,13 @@ interface TripRequestData {
   start?: Date;
   end?: Date;
   destination: string;
+  bus: string;
   pilgrimsId?: number[];
 }
 
 const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
+  const { data } = useSession();
+  const [token, setToken] = useState("");
   const router = useRouter();
   const [pilgrimData, setPilgrimData] = useState<Pilgrim[]>([]);
   const [selectedPilgrim, setSelectedPilgrim] = useState<Pilgrim[]>([]);
@@ -92,6 +96,7 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
   const [guide, setGuide] = useState("");
   const [meetingPoint, setMeetingPoint] = useState<string>("");
   const [destination, setDestination] = useState<string>("");
+  const [bus, setBus] = useState<string>("");
   const [date, setDate] = useState<Date>();
   const [standByDate, setStandByDate] = useState<Date>();
   const [startDate, setStartDate] = useState<Date>();
@@ -100,46 +105,51 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWlubmloMTIzNCIsInN1YiI6eyJuYW1lIjoicmlvIiwicm9sZSI6ImFkbWluIn0sImlhdCI6MTcxNDI2Njk4OSwiZXhwIjoxNzE0MzUzMzg5fQ.qqs6LLUGqMsOJ-DlfZvF_WrbpZh2iQX9b5KjMlGHMqE"; // Replace with your token
-        // Fetch trip data
-        const tripData: TripResponseData = await tripService.fetchTripData(
-          tripId,
-          token
-        );
-        setResponseData(tripData);
-        if (tripData) {
-          setEventName(tripData.name);
-          setMeetingPoint(tripData.meeting_point);
-          setMeetingPoint(tripData.meeting_point);
-          setDestination(tripData.destination);
-          setDate(tripData.date);
-          setGuide(`${tripData.picId}`);
-          setStandByDate(tripData.stand_by);
-          setStartDate(tripData.start);
-          setEndDate(tripData.end);
-          console.log(`start ${tripData.start}`);
-          if (tripData.pilgrims) {
-            setSelectedPilgrim(tripData.pilgrims);
+        if (data?.accessToken) {
+          // Fetch trip data
+          const tripData: TripResponseData =
+            await tripService.fetchTripDataById(tripId, data?.accessToken);
+          setResponseData(tripData);
+          console.log(`tripnya ${tripData}`)
+          if (tripData) {
+            console.log(`check eventname ${tripData.name}`);
+            setEventName(tripData.name);
+            setMeetingPoint(tripData.meeting_point);
+            setMeetingPoint(tripData.meeting_point);
+            setDestination(tripData.destination);
+            setBus(tripData.bus);
+            setDate(tripData.date);
+            setGuide(`${tripData.picId}`);
+            setStandByDate(tripData.stand_by);
+            setStartDate(tripData.start);
+            setEndDate(tripData.end);
+            console.log(`start ${tripData.start}`);
+            if (tripData.pilgrims) {
+              setSelectedPilgrim(tripData.pilgrims);
+            }
           }
-        }
-        // Fetch pilgrim data
-        const responsePilgrim = await tripService.fetchPilgrimData(token);
-        // setPilgrimData(pilgrimData);
-        if (tripData.pilgrims) {
-          filterPilgrims(responsePilgrim, tripData.pilgrims);
-        }
+          // Fetch pilgrim data
+          const responsePilgrim = await tripService.fetchPilgrimData(
+            data?.accessToken
+          );
+          // setPilgrimData(pilgrimData);
+          if (tripData.pilgrims) {
+            filterPilgrims(responsePilgrim, tripData.pilgrims);
+          }
 
-        // Fetch guide data
-        const guideData = await tripService.fetchPilgrimData(token);
-        setGuideData(guideData);
+          // Fetch guide data
+          const guideData = await tripService.fetchPilgrimData(
+            data?.accessToken
+          );
+          setGuideData(guideData);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
 
     fetchData();
-  }, []); // Empty dependency array to run effect only once after initial render
+  }, [data?.accessToken]); // Empty dependency array to run effect only once after initial render
 
   useEffect(() => {
     setPage(1);
@@ -158,7 +168,6 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
       return pilgrimData.filter((data) => {
         return (
           data.portion_number.toLowerCase().includes(search.toLowerCase()) ||
-          data.bus.toLowerCase().includes(search.toLowerCase()) ||
           data.phone_number.toLowerCase().includes(search.toLowerCase()) ||
           data.name.toLowerCase().includes(search.toLowerCase()) ||
           data.group.toLowerCase().includes(search.toLowerCase()) ||
@@ -257,6 +266,7 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
       guide.trim() !== "" &&
       meetingPoint.trim() !== "" &&
       destination.trim() !== "" &&
+      bus.trim() !== "" &&
       date &&
       standByDate &&
       startDate &&
@@ -282,33 +292,33 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
       start: parsedStartDate,
       end: parsedEndDate,
       destination: destination,
+      bus: bus,
       pilgrimsId: pilgrimsId,
     };
-    const createTrip = async () => {
+    const updateTrip = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/trip/${tripId}`, {
-          method: "PATCH",
-          body: JSON.stringify(tripRequestData),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization:
-              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWlubmloMTIzNCIsInN1YiI6eyJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifSwiaWF0IjoxNzE0Mjg3MzA3LCJleHAiOjE3MTQzNzM3MDd9.PwnCYkzlZZECoaKu3i8EO8y_G7l7yA4nkD6YzI_7ssM",
-          },
-        });
-        if (!response.ok) {
-          throw new Error("Gagal memperbaharui data");
-        }
+        // const response = await fetch(`http://localhost:8000/trip/${tripId}`, {
+        //   method: "PATCH",
+        //   body: JSON.stringify(tripRequestData),
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //     Authorization:
+        //       "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWlubmloMTIzNCIsInN1YiI6eyJuYW1lIjoiYWRtaW4iLCJyb2xlIjoiYWRtaW4ifSwiaWF0IjoxNzE0MzE4OTYzLCJleHAiOjE3MTQ0MDUzNjN9.IaKHIeFg9zwAx-CQYSh5Pc8iYGRZa2NwfKIE8mxsytA",
+        //   },
+        // });
+        // if (!response.ok) {
+        //   throw new Error("Gagal memperbaharui data");
+        // }
+        await tripService.updateTrip(tripId, tripRequestData, "ini token");
         showMessage("Berhasil memperbaharui data");
         const tripPage = "/trip/list";
-
-        router.push("/trip/list");
+        router.push(tripPage);
       } catch (error) {
         showMessage(`${error}`, "error");
-
         console.error("Error fetching trip data:", error);
       }
     };
-    createTrip();
+    updateTrip();
   };
 
   const showMessage = (msg = "", type = "success") => {
@@ -409,6 +419,29 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
                     onChange={(e) => setDestination(e.target.value)}
                   />
                 </div>
+                <div className="mt-4 flex items-center">
+                  <label
+                    htmlFor="bus"
+                    className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2"
+                  >
+                    Destinasi
+                  </label>
+                  <input
+                   min={0}
+                    id="bus"
+                    type="number"
+                    name="bus"
+                    value={parseInt(bus)}
+                    className="form-input flex-1"
+                    placeholder="Masukkan Nomor Bis"
+                    onChange={(e) => setBus(e.target.value)}
+                    onKeyPress={(event) => {
+                      if (!/[0-9]/.test(event.key)) {
+                          event.preventDefault();
+                      }
+                  }}
+                  />
+                </div>
               </div>
               <div className="w-full lg:w-1/2">
                 <div className="text-lg">Detail Waktu :</div>
@@ -495,7 +528,6 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
                   <tr>
                     <th className="text-nowrap">No. Porsi</th>
                     <th className="text-nowrap w-1/2">Jamaah</th>
-                    <th className="text-nowrap">Bus</th>
                     <th className="text-nowrap">No. Telepon</th>
                     <th className="text-nowrap"></th>
                   </tr>
@@ -513,7 +545,6 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
                       <tr className="align-top" key={pilgrim.id}>
                         <td>{pilgrim.portion_number}</td>
                         <td>{pilgrim.name}</td>
-                        <td>{pilgrim.bus}</td>
                         <td>{pilgrim.phone_number}</td>
                         <td>
                           <button
