@@ -55,7 +55,7 @@ const ComponentsJamaah = () => {
   useEffect(() => {
     const fetchPilgrimData = async () => {
       try {
-        if (data?.accessToken) {
+        if (data && data.accessToken) {
           const response = await jamaahService.fetchJamaahData(
             data.accessToken
           );
@@ -409,7 +409,7 @@ const ComponentsJamaah = () => {
                             className="border border-green-500 rounded-md py-1 px-2 text-green-500 hover:bg-green-500 hover:text-white"
                             onClick={() => downloadPDF(index)}
                           >
-                            Unduh PDF
+                            Unduh
                           </button>
                         </div>
                       </td>

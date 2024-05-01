@@ -23,7 +23,7 @@ const Header = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (data?.accessToken) {
+    if (data && data.accessToken) {
       const decodedToken = decodeAccessToken(data.accessToken);
       if (decodedToken && decodedToken.sub && decodedToken.sub.name) {
         setName(decodedToken.sub.name);

@@ -34,7 +34,7 @@ const PilgrimPreview = async (props: Props) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (data?.accessToken) {
+        if (data && data.accessToken) {
           // Fetch trip data
           const jamaah: Pilgrim = await jamaahService.fetchJamaahByPortionNumber(
             props.params.portionNumber,

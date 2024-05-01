@@ -105,12 +105,12 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (data?.accessToken) {
+        if (data && data.accessToken) {
           // Fetch trip data
           const tripData: TripResponseData =
             await tripService.fetchTripDataById(tripId, data?.accessToken);
           setResponseData(tripData);
-          console.log(`tripnya ${tripData}`)
+          setToken(data?.accessToken)
           if (tripData) {
             console.log(`check eventname ${tripData.name}`);
             setEventName(tripData.name);
@@ -138,7 +138,7 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
           }
 
           // Fetch guide data
-          const guideData = await tripService.fetchPilgrimData(
+          const guideData = await tripService.fetchGuideData(
             data?.accessToken
           );
           setGuideData(guideData);
@@ -309,7 +309,7 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
         // if (!response.ok) {
         //   throw new Error("Gagal memperbaharui data");
         // }
-        await tripService.updateTrip(tripId, tripRequestData, "ini token");
+        await tripService.updateTrip(tripId, tripRequestData, token);
         showMessage("Berhasil memperbaharui data");
         const tripPage = "/trip/list";
         router.push(tripPage);

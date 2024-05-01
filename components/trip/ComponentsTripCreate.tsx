@@ -58,7 +58,7 @@ const ComponentsTripCreate = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (data?.accessToken) {
+        if (data && data.accessToken) {
           // Fetch pilgrim data
           const pilgrimData = await tripService.fetchPilgrimData(
             data?.accessToken
@@ -66,9 +66,7 @@ const ComponentsTripCreate = () => {
           setPilgrimData(pilgrimData);
 
           // Fetch guide data
-          const guideData = await tripService.fetchPilgrimData(
-            data?.accessToken
-          );
+          const guideData = await tripService.fetchGuideData(data?.accessToken);
           setGuideData(guideData);
 
           setToken(data?.accessToken);
@@ -315,13 +313,12 @@ const ComponentsTripCreate = () => {
                     onChange={(e) => setGuide(e.target.value)}
                   >
                     <option value="">Pilih Pembimbing</option>
-                    {/* <option value="1">Agus</option>
-                    <option value="2">Asep</option> */}
-                    {guideData.map((guide) => (
-                      <option key={guide.id} value={guide.id}>
-                        {guide.name}
-                      </option>
-                    ))}
+                    {guideData &&
+                      guideData.map((guide) => (
+                        <option key={guide.id} value={guide.id}>
+                          {guide.name}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -363,7 +360,7 @@ const ComponentsTripCreate = () => {
                     Bis
                   </label>
                   <input
-                   min={0}
+                    min={0}
                     id="bus"
                     type="number"
                     name="bus"
@@ -372,9 +369,9 @@ const ComponentsTripCreate = () => {
                     onChange={(e) => setBus(e.target.value)}
                     onKeyPress={(event) => {
                       if (!/[0-9]/.test(event.key)) {
-                          event.preventDefault();
+                        event.preventDefault();
                       }
-                  }}
+                    }}
                   />
                 </div>
               </div>

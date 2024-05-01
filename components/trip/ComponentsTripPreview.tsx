@@ -43,7 +43,7 @@ const ComponentsTripPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (data?.accessToken) {
+        if (data && data.accessToken) {
           // Fetch trip data
           const tripData: TripResponseData =
             await tripService.fetchTripDataById(tripId, data?.accessToken);
@@ -113,7 +113,7 @@ const ComponentsTripPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
       </div>
       <div className="panel">
         <div className="text-2xl font-semibold uppercase">
-          Trip ke Makkah 4 Oktober 2024
+         {tripData?.name}
         </div>
 
         <hr className="my-6 border-white-light dark:border-[#1b2e4b]" />

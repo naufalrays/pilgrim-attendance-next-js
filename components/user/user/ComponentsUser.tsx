@@ -47,7 +47,7 @@ const ComponentsAccount = () => {
   useEffect(() => {
     const fetchTripData = async () => {
       try {
-        if (data?.accessToken) {
+        if (data && data.accessToken) {
           const responseTripData = await accountService.fetchAccountData(
             data.accessToken
           );

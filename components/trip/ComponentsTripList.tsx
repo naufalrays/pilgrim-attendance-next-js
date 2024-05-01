@@ -35,7 +35,7 @@ const ComponentsTripList = () => {
   useEffect(() => {
     const fetchTripData = async () => {
       try {
-        if (data?.accessToken) {
+        if (data && data.accessToken) {
           const response = await tripService.fetchTripData(data?.accessToken);
           setItems(response);
           setInitialRecords(sortBy(response, "invoice"));
