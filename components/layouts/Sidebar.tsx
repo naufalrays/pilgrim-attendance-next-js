@@ -16,6 +16,8 @@ import IconNotes from "../icon/menu/IconMenuNotes";
 import IconMenuNotes from "../icon/menu/IconMenuNotes";
 import IconMinus from "../icon/IconMinus";
 import IconMenuCharts from "../icon/menu/IconMenuCharts";
+import IconMail from "../icon/IconMail";
+import IconMenuMailbox from "../icon/menu/IconMenuMailbox";
 const Sidebar = () => {
   const dispatch = useDispatch();
   const pathname = usePathname();
@@ -87,6 +89,26 @@ const Sidebar = () => {
             <ul className="relative space-y-0.5 p-4 py-0 font-semibold">
               <li className="nav-item">
                 <ul>
+                <h2 className="-mx-4 mb-1 flex items-center bg-white-light/30 px-7 py-3 font-extrabold uppercase dark:bg-dark dark:bg-opacity-[0.08]">
+                    <IconMinus className="hidden h-5 w-4 flex-none" />
+                    <span>Pengumuman</span>
+                  </h2>
+                  <li className="menu nav-item">
+                    <Link
+                      href="/announcement"
+                      className={`group ${
+                        currentMenu !== "announcement" ? "active" : ""
+                      }`}
+                      onClick={() => setCurrentMenu("announcement")}
+                    >
+                      <div className="flex items-center">
+                        <IconMenuMailbox className="shrink-0 group-hover:!text-primary" />
+                        <span className="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">
+                        Pesan
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
                   <h2 className="-mx-4 mb-1 flex items-center bg-white-light/30 px-7 py-3 font-extrabold uppercase dark:bg-dark dark:bg-opacity-[0.08]">
                     <IconMinus className="hidden h-5 w-4 flex-none" />
                     <span>Data</span>
@@ -141,7 +163,7 @@ const Sidebar = () => {
                       <div className="flex items-center">
                         <IconMenuContacts className="shrink-0 group-hover:!text-primary" />
                         <span className="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">
-                          Trip
+                          Kegiatan
                         </span>
                       </div>
 
@@ -192,7 +214,7 @@ const Sidebar = () => {
                   </li>{" "}
                   <h2 className="-mx-4 mb-1 flex items-center bg-white-light/30 px-7 py-3 font-extrabold uppercase dark:bg-dark dark:bg-opacity-[0.08]">
                     <IconMinus className="hidden h-5 w-4 flex-none" />
-                    <span>Report</span>
+                    <span>Laporan</span>
                   </h2>
                   <li className="menu nav-item">
                     <Link
@@ -205,7 +227,7 @@ const Sidebar = () => {
                       <div className="flex items-center">
                         <IconMenuCharts className="shrink-0 group-hover:!text-primary" />
                         <span className="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">
-                          Report
+                        Kegiatan
                         </span>
                       </div>
                     </Link>

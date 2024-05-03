@@ -122,3 +122,37 @@ table tr .mantine-Checkbox-root {
 .mantine-ScrollArea-viewport > div:first-child > div {
     @apply bg-none;
 }
+.dark .mantine-Input-input{
+    border-color : #17263c;
+    background-color: #121e32;
+}
+.dark .mantine-InputWrapper-label{
+    color: rgb(136 142 168/ var(--tw-text-opacity));
+    font-family: 'Nunito', sans-serif; /* Mengatur jenis font menjadi Nunito */
+    font-weight: 400; /* Mengatur bobot font menjadi semi-bold */
+    font-size: 16px; /* Mengatur ukuran font menjadi 16px */
+}
+.dark  .mantine-MultiSelect-searchInput{
+    color:  #888ea8;
+    border-color : rgb(18 30 50/ var(--tw-bg-opacity));
+    background-color: rgb(18 30 50/ var(--tw-bg-opacity));
+}
+
+.mantine-MultiSelect-wrapper:focus {
+    border-color :  rgb(23 38 60/ var(--tw-border-opacity))
+}
+
+.dark .mantine-MultiSelect-dropdown{
+    border-color : rgb(18 30 50/ var(--tw-bg-opacity));
+    background-color: rgb(18 30 50/ var(--tw-bg-opacity));
+}
+
+.dark .mantine-MultiSelect-item{
+    color: rgb(136 142 168/ var(--tw-text-opacity));
+    border-color : rgb(18 30 50/ var(--tw-bg-opacity));
+    /* background-color: rgb(18 30 50/ var(--tw-bg-opacity)); */
+}
+.mantine-MultiSelect-item.selected{
+    border-color : red;
+    background-color: red;
+}
