@@ -10,14 +10,12 @@ async function refreshToken(token: JWT): Promise<JWT> {
       authorization: `Bearer ${token.data.refreshToken}`,
     },
   });
-  console.log("refreshed");
-
   const response = await res.json();
 
   return response;
 }
 
- const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -75,6 +73,5 @@ async function refreshToken(token: JWT): Promise<JWT> {
     signIn: "/auth/signin",
   },
 };
-
 
 export default authOptions;
