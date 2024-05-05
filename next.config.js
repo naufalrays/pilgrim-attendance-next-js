@@ -2,7 +2,7 @@ module.exports = {
     async headers() {
         return [{
             // matching all API routes
-            source: "/pilgrim*",
+            source: "/pilgrim",
             headers: [{
                     key: "Access-Control-Allow-Credentials",
                     value: "true"
