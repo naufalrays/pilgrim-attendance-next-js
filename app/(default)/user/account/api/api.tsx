@@ -43,7 +43,7 @@ export const accountService = {
 
   fetchAccountData: async (token: string) => {
     try {
-      const response = await fetch("http://localhost:8000/user", {
+      const response = await fetch(`${Backend_URL}/user`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
