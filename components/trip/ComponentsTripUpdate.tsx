@@ -424,7 +424,7 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
                     htmlFor="bus"
                     className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2"
                   >
-                    Destinasi
+                    Bis
                   </label>
                   <input
                    min={0}
@@ -610,11 +610,6 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
                 accessor: "name",
                 sortable: true,
                 render: ({ name, id }) => <div>{name}</div>,
-              },
-              {
-                title: "Bus",
-                accessor: "bus",
-                sortable: true,
               },
               {
                 title: "No. Telepon",

@@ -8,7 +8,6 @@ import "flatpickr/dist/flatpickr.css";
 import IconSearch from "../../icon/IconSearch";
 import IconListCheck from "../../icon/IconListCheck";
 import IconUserPlus from "../../icon/IconUserPlus";
-import IconLayoutGrid from "../../icon/IconLayoutGrid";
 import { format } from "date-fns";
 import { jamaahService } from "@/app/(default)/user/jamaah/api/api";
 import { useSession } from "next-auth/react";
@@ -34,8 +33,6 @@ const ComponentsJamaah = () => {
   const [pilgrims, setPilgrim] = useState<Pilgrim[]>([]);
   const [filteredItems, setFilteredItems] = useState<any>(pilgrims);
   const [token, setToken] = useState("");
-
-  const [value, setValue] = useState<any>("list");
   const [defaultParams] = useState({
     id: null,
     portion_number: "",
@@ -310,28 +307,6 @@ const ComponentsJamaah = () => {
                 Tambahkan Jamaah
               </button>
             </div>
-            <div>
-              <button
-                type="button"
-                className={`btn btn-outline-primary p-2 ${
-                  value === "list" && "bg-primary text-white"
-                }`}
-                onClick={() => setValue("list")}
-              >
-                <IconListCheck />
-              </button>
-            </div>
-            <div>
-              <button
-                type="button"
-                className={`btn btn-outline-primary p-2 ${
-                  value === "grid" && "bg-primary text-white"
-                }`}
-                onClick={() => setValue("grid")}
-              >
-                <IconLayoutGrid />
-              </button>
-            </div>
           </div>
           <div className="relative">
             <input
@@ -350,7 +325,6 @@ const ComponentsJamaah = () => {
           </div>
         </div>
       </div>
-      {value === "list" && (
         <div className="panel mt-5 overflow-hidden border-0 p-0">
           <div className="table-responsive">
             <table className="table-striped table-hover">
@@ -420,92 +394,7 @@ const ComponentsJamaah = () => {
             </table>
           </div>
         </div>
-      )}
 
-      {value === "grid" && (
-        <div className="mt-5 grid w-full grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {filteredItems.map((pilgrim: any) => {
-            return (
-              <div
-                className="relative overflow-hidden rounded-md bg-white text-center shadow dark:bg-[#1c232f]"
-                key={pilgrim.id}
-              >
-                <div className="relative overflow-hidden rounded-md bg-white text-center shadow dark:bg-[#1c232f]">
-                  <div className="rounded-t-md bg-white/40 bg-[url('/assets/images/notification-bg.png')] bg-cover bg-center p-6 pb-0">
-                    <img
-                      className="mx-auto max-h-40 w-4/5 object-contain"
-                      src={`/assets/images/${pilgrim.path}`}
-                      alt="contact_image"
-                    />
-                  </div>
-                  <div className="relative -mt-10 px-6 pb-24">
-                    <div className="rounded-md bg-white px-2 py-4 shadow-md dark:bg-gray-900">
-                      <div className="text-xl">{pilgrim.name}</div>
-                      <div className="text-white-dark">{pilgrim.role}</div>
-                      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex-auto">
-                          <div className="text-info">{pilgrim.posts}</div>
-                          <div>Posts</div>
-                        </div>
-                        <div className="flex-auto">
-                          <div className="text-info">{pilgrim.following}</div>
-                          <div>Following</div>
-                        </div>
-                        <div className="flex-auto">
-                          <div className="text-info">{pilgrim.followers}</div>
-                          <div>Followers</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-6 grid grid-cols-1 gap-4 ltr:text-left rtl:text-right">
-                      <div className="flex items-center">
-                        <div className="flex-none ltr:mr-2 rtl:ml-2">
-                          Email :
-                        </div>
-                        <div className="truncate text-white-dark">
-                          {pilgrim.email}
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="flex-none ltr:mr-2 rtl:ml-2">
-                          Phone :
-                        </div>
-                        <div className="text-white-dark">
-                          {pilgrim.phone_number}
-                        </div>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="flex-none ltr:mr-2 rtl:ml-2">
-                          Address :
-                        </div>
-                        <div className="text-white-dark">
-                          {pilgrim.location}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-0 mt-6 flex w-full gap-4 p-6 ltr:left-0 rtl:right-0">
-                    <button
-                      type="button"
-                      className="btn btn-outline-primary w-1/2"
-                      onClick={() => editUser(pilgrim)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-outline-danger w-1/2"
-                      onClick={() => deleteUser(pilgrim.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       <Transition appear show={addContactModal} as={Fragment}>
         <Dialog

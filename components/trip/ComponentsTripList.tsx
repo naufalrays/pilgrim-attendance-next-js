@@ -63,6 +63,7 @@ const ComponentsTripList = () => {
   });
 
   const formatTime = (dateString: string) => {
+    console.log(`JAlan ${dateString}`)
     const date = new Date(dateString);
     return format(date, "HH:mm");
   };
@@ -207,19 +208,19 @@ const ComponentsTripList = () => {
                 title: "Jam Kumpul",
                 accessor: "stand_by",
                 sortable: true,
-                render: ({ date }) => <div>{formatTime(date)}</div>,
+                render: ({ stand_by }) => <div>{formatTime(stand_by)}</div>,
               },
               {
                 title: "Berangkat",
                 accessor: "start",
                 sortable: true,
-                render: ({ date }) => <div>{formatTime(date)}</div>,
+                render: ({ start }) => <div>{formatTime(start)}</div>,
               },
               {
                 title: "Kembali",
                 accessor: "end",
                 sortable: true,
-                render: ({ date }) => <div>{formatTime(date)}</div>,
+                render: ({ end }) => <div>{formatTime(end)}</div>,
               },
               {
                 title: "Destinasi",
