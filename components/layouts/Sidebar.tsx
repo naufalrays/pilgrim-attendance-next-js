@@ -194,26 +194,6 @@ const Sidebar = () => {
                   </li>
                   <h2 className="-mx-4 mb-1 flex items-center bg-white-light/30 px-7 py-3 font-extrabold uppercase dark:bg-dark dark:bg-opacity-[0.08]">
                     <IconMinus className="hidden h-5 w-4 flex-none" />
-                    <span>Cetak</span>
-                  </h2>
-                  <li className="menu nav-item">
-                    <Link
-                      href="/nametag"
-                      className={`group ${
-                        currentMenu !== "nametag" ? "active" : ""
-                      }`}
-                      onClick={() => setCurrentMenu("nametag")}
-                    >
-                      <div className="flex items-center">
-                        <IconMenuNotes className="shrink-0 group-hover:!text-primary" />
-                        <span className="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">
-                          Name Tag
-                        </span>
-                      </div>
-                    </Link>
-                  </li>{" "}
-                  <h2 className="-mx-4 mb-1 flex items-center bg-white-light/30 px-7 py-3 font-extrabold uppercase dark:bg-dark dark:bg-opacity-[0.08]">
-                    <IconMinus className="hidden h-5 w-4 flex-none" />
                     <span>Laporan</span>
                   </h2>
                   <li className="menu nav-item">

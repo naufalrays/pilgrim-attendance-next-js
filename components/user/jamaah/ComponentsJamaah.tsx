@@ -14,6 +14,7 @@ import { useSession } from "next-auth/react";
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
 import { Backend_URL } from "@/lib/Constants";
+import IconPrinter from "@/components/icon/IconPrinter";
 
 interface Pilgrim {
   id: number;
@@ -173,7 +174,6 @@ const ComponentsJamaah = () => {
         : 0;
 
       let pilgrim = {
-        id: maxUserId + 1,
         portion_number: params.portion_number,
         name: params.name,
         gender: params.gender,
@@ -233,6 +233,105 @@ const ComponentsJamaah = () => {
       padding: "10px 20px",
     });
   };
+
+  const downloadAllPilgrim = async () => {
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "cm",
+      format: "a4",
+    });
+  
+    const margin = 1; // Margin halaman dalam cm
+    const nametagWidth = 8.5; // Lebar nametag dalam cm
+    const nametagHeight = 5.5; // Tinggi nametag dalam cm
+    const pageWidth = doc.internal.pageSize.getWidth() - margin * 2; // Lebar halaman dalam cm
+    const pageHeight = doc.internal.pageSize.getHeight() - margin * 2; // Tinggi halaman dalam cm
+    let x = margin; // Posisi x awal
+    let y = margin; // Posisi y awal
+    console.log(`lengthny ${pilgrims.length}`);
+  
+    pilgrims.forEach((pilgrim :Pilgrim, index :number) => {
+      // Tambahkan nametag
+      doc.text(pilgrim.name, x, y, { align: "center" });
+  
+      // Perbarui posisi x dan y
+      x += nametagWidth + margin;
+  
+      // Cek apakah masih muat di samping
+      if (x + nametagWidth > pageWidth) {
+        // Jika tidak muat, pindah ke baris baru
+        x = margin;
+        y += nametagHeight + margin;
+  
+        // Cek apakah masih muat di halaman ini
+        if (y + nametagHeight > pageHeight) {
+          // Jika tidak muat, tambahkan halaman baru
+          doc.addPage();
+          x = margin;
+          y = margin;
+        }
+      }
+    });
+  
+    doc.save("nametags.pdf");
+  };
+  
+  const addNametag = async (doc: any, pilgrim: Pilgrim, x : any, y :any) => {
+    const qrCodeDataURL = await QRCode.toDataURL(
+      `${Backend_URL}/pilgrim/${pilgrim.portion_number}`,
+      { errorCorrectionLevel: "H", type: "image/jpeg", margin: 0 }
+    );
+  
+    // Tambahkan background
+    doc.addImage(
+      "/assets/images/pdf-background.png",
+      "PNG",
+      x,
+      y,
+      8.5,
+      5.5
+    );
+  
+    // Menghitung posisi horizontal dan vertikal tengah
+    const centerX = x + 8.5 / 2;
+    const centerY = y + 5.5 / 2;
+  
+    // Teks "KBIH TARBIS"
+    doc.setTextColor("#ffffff"); // Mengatur warna teks menjadi putih
+    doc.setFontSize(11); // Mengatur ukuran font menjadi 12
+    doc.text("KBIH TARBIS", centerX, y + 0.6, { align: "center" });
+  
+    // Nama Jamaah
+    doc.setTextColor("#000000"); // Mengatur warna teks menjadi hitam
+    doc.setFontSize(6); // Mengatur ukuran font menjadi 12
+    doc.text(pilgrim.name, centerX, y + 5, { align: "center" });
+  
+    // Nomor Porsi Jamaah
+    doc.text(pilgrim.portion_number, centerX, y + 5.28, { align: "center" });
+  
+    // QR Code
+    doc.setTextColor("#ffffff"); // Mengatur warna teks menjadi putih
+    doc.setFontSize(3.6); // Mengatur ukuran font menjadi 12
+    doc.addImage(qrCodeDataURL, "JPEG", centerX - 0.7, y + 5.4, 1.4, 1.4);
+  
+    // Alamat
+    doc.text(
+      "Jl. Raya Jagakarsa Jl. H. Sa Amah No.45 7, RT.7/RW.4, Jagakarsa, \nKec. Jagakarsa, Kota Jakarta Selatan, DKI Jakarta 12620",
+      centerX,
+      y + 7.8,
+      { align: "center" }
+    );
+  
+    // Kontak
+    doc.setFontSize(5); // Mengatur ukuran font menjadi 12
+    doc.text("Kontak : Abdul Holik Muhidin (+62 8118741217)", centerX, y + 8.3, {
+      align: "center",
+    });
+  };
+  
+  
+  // Panggil downloadAllPilgrim saat tombol "Cetak Semua Jamaah" ditekan
+  
 
   const downloadPDF = async (id: number) => {
     const doc = new jsPDF({
@@ -307,6 +406,16 @@ const ComponentsJamaah = () => {
                 Tambahkan Jamaah
               </button>
             </div>
+            {/* <div>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => downloadAllPilgrim()}
+              >
+               <IconPrinter className="ltr:mr-2 rtl:ml-2"/>
+               Cetak Semua Jamaah
+              </button>
+            </div> */}
           </div>
           <div className="relative">
             <input
