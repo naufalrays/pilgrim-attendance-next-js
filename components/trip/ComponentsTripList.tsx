@@ -8,14 +8,13 @@ import { DataTableSortStatus, DataTable } from "mantine-datatable";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
-import useSWR from "swr";
 import Swal from "sweetalert2";
 import { tripService } from "@/app/(default)/trip/api/api";
 import { useSession } from "next-auth/react";
 
 interface Trip {
   id: number;
-  picId?: number | null;
+  pic_id?: number | null;
   name: string;
   date: string;
   meeting_point: string;
@@ -23,8 +22,8 @@ interface Trip {
   start: string;
   end: string;
   destination: string;
-  createdAt: string;
-  updatedAt?: string | null;
+  created_at: string;
+  updated_at?: string | null;
 }
 
 const ComponentsTripList = () => {
@@ -63,7 +62,6 @@ const ComponentsTripList = () => {
   });
 
   const formatTime = (dateString: string) => {
-    console.log(`JAlan ${dateString}`)
     const date = new Date(dateString);
     return format(date, "HH:mm");
   };

@@ -8,9 +8,9 @@ import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 
 interface TripResponseData {
-  picId: number;
+  pic_id: number;
   name: string;
-  picName: string;
+  pic_name?: string;
   date: Date;
   meeting_point: string;
   stand_by: Date;
@@ -47,7 +47,7 @@ const ComponentsTripPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
           // Fetch trip data
           const tripData: TripResponseData =
             await tripService.fetchTripDataById(tripId, data?.accessToken);
-            setToken(data?.accessToken)
+          setToken(data?.accessToken);
           if (tripData) {
             setTripData(tripData);
           }
@@ -112,17 +112,15 @@ const ComponentsTripPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
         </Link>
       </div>
       <div className="panel">
-        <div className="text-2xl font-semibold uppercase">
-         {tripData?.name}
-        </div>
+        <div className="text-2xl font-semibold uppercase">{tripData?.name}</div>
 
         <hr className="my-6 border-white-light dark:border-[#1b2e4b]" />
         <div className="flex flex-col flex-wrap justify-between gap-6 lg:flex-row">
           <div className="flex-1">
             <div className="space-y-1 text-white-dark">
-              <div>Pemandu:</div>
+              <div>Pembimbing:</div>
               <div className="font-semibold text-black dark:text-white">
-                {tripData?.picName}
+                {tripData?.pic_name ? tripData.pic_name : "Belum ada pembimbing"}
               </div>
             </div>
           </div>

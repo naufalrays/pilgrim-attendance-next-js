@@ -23,9 +23,9 @@ import { useRouter } from "next/navigation";
 
 interface TripResponseData {
   id: number;
-  picId: number;
+  pic_id: number;
   name: string;
-  picName?: string;
+  pic_name?: string;
   date?: string;
   meeting_point: string;
   stand_by?: string;
@@ -62,17 +62,18 @@ interface Pilgrim {
 }
 
 const ComponentsReport = () => {
+  const router = useRouter();
+
   const defaultParams = {
     id: null,
     name: "",
-    picName: "",
+    pic_name: "",
     date: "",
     absent: 0,
     notYetAbsent: 0,
     permission: 0,
     sick: 0,
   };
-  const router = useRouter();
 
   const [params, setParams] = useState<TripResponseData>(
     JSON.parse(JSON.stringify(defaultParams))
@@ -126,22 +127,11 @@ const ComponentsReport = () => {
     setParams({ ...params, [id]: value });
   };
 
-  const viewNote = (id: number) => {
+  const editNote = (id: number) => {
     const tripPage = `report/${id}`;
     router.push(tripPage);
     // setParams(note);
     // setIsViewNoteModal(true);
-  };
-
-  const editNote = (note: any = null) => {
-    setIsShowNoteMenu(false);
-    const json = JSON.parse(JSON.stringify(defaultParams));
-    setParams(json);
-    if (note) {
-      let json1 = JSON.parse(JSON.stringify(note));
-      setParams(json1);
-    }
-    setAddContactModal(true);
   };
 
   const showMessage = (msg = "", type = "success") => {
@@ -321,19 +311,10 @@ const ComponentsReport = () => {
                                 <li>
                                   <button
                                     type="button"
-                                    onClick={() => editNote(trip)}
+                                    onClick={() => editNote(trip.id)}
                                   >
-                                    <IconPencil className="h-4 w-4 shrink-0 ltr:mr-3 rtl:ml-3" />
+                                    <IconPencil className="h-4.5 w-4.5 shrink-0 ltr:mr-3 rtl:ml-3" />
                                     Edit
-                                  </button>
-                                </li>
-                                <li>
-                                  <button
-                                    type="button"
-                                    onClick={() => viewNote(trip.id)}
-                                  >
-                                    <IconEye className="h-4.5 w-4.5 shrink-0 ltr:mr-3 rtl:ml-3" />
-                                    View
                                   </button>
                                 </li>
                               </ul>
@@ -341,9 +322,18 @@ const ComponentsReport = () => {
                           </div>
                         </div>
                         <div>
-                          <h4 className="mt-2 font-semibold">
-                            {trip.picName != "" ? trip.picName : "-"}
-                          </h4>
+                          <div className="mt-2 flex flex-wrap gap-4">
+                            <div className="flex items-center">
+                              Pembimbing :
+                            </div>
+                            {trip?.pic_name ? (
+                              <div>{trip.pic_name}</div>
+                            ) : (
+                              <div className="text-gray-500">
+                                Tidak ada Pembimbing
+                              </div>
+                            )}
+                          </div>
                           <div className="mt-2 flex flex-wrap gap-4">
                             <div className="flex items-center">Berangkat :</div>
                             {trip.check_in.absent !== 0 && (
@@ -450,234 +440,6 @@ const ComponentsReport = () => {
               No data available
             </div>
           )}
-
-          <Transition appear show={addContactModal} as={Fragment}>
-            <Dialog
-              as="div"
-              open={addContactModal}
-              onClose={() => setAddContactModal(false)}
-              className="relative z-50"
-            >
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0"
-                enterTo="opacity-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0"
-              >
-                <div className="fixed inset-0 bg-[black]/60" />
-              </Transition.Child>
-
-              <div className="fixed inset-0 overflow-y-auto">
-                <div className="flex min-h-full items-center justify-center px-4 py-8">
-                  <Transition.Child
-                    as={Fragment}
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0 scale-95"
-                    enterTo="opacity-100 scale-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100 scale-100"
-                    leaveTo="opacity-0 scale-95"
-                  >
-                    <Dialog.Panel className="panel w-full max-w-lg overflow-hidden rounded-lg border-0 p-0 text-black dark:text-white-dark">
-                      <button
-                        type="button"
-                        onClick={() => setAddContactModal(false)}
-                        className="absolute top-4 text-gray-400 outline-none hover:text-gray-800 ltr:right-4 rtl:left-4 dark:hover:text-gray-600"
-                      >
-                        <IconX />
-                      </button>
-                      <div className="bg-[#fbfbfb] py-3 text-lg font-medium ltr:pl-5 ltr:pr-[50px] rtl:pl-[50px] rtl:pr-5 dark:bg-[#121c2c]">
-                        {params.id ? "Edit Note" : "Add Note"}
-                      </div>
-                      <div className="p-5">
-                        <form>
-                          <div className="mb-5">
-                            <label htmlFor="name">Name</label>
-                            <input
-                              id="name"
-                              type="text"
-                              placeholder="Enter name"
-                              className="form-input"
-                              value={params.name}
-                              onChange={(e) => changeValue(e)}
-                            />
-                          </div>
-                          <div className="mb-5">
-                            <label htmlFor="name">User Name</label>
-                            <select
-                              id="user"
-                              className="form-select"
-                              value={params.picName}
-                              onChange={(e) => changeValue(e)}
-                            >
-                              <option value="">Select User</option>
-                              <option value="Max Smith">Max Smith</option>
-                              <option value="John Doe">John Doe</option>
-                              <option value="Kia Jain">Kia Jain</option>
-                              <option value="Karena Courtliff">
-                                Karena Courtliff
-                              </option>
-                              <option value="Vladamir Koschek">
-                                Vladamir Koschek
-                              </option>
-                              <option value="Robert Garcia">
-                                Robert Garcia
-                              </option>
-                              <option value="Marie Hamilton">
-                                Marie Hamilton
-                              </option>
-                              <option value="Megan Meyers">Megan Meyers</option>
-                              <option value="Angela Hull">Angela Hull</option>
-                              <option value="Karen Wolf">Karen Wolf</option>
-                              <option value="Jasmine Barnes">
-                                Jasmine Barnes
-                              </option>
-                              <option value="Thomas Cox">Thomas Cox</option>
-                              <option value="Marcus Jones">Marcus Jones</option>
-                              <option value="Matthew Gray">Matthew Gray</option>
-                              <option value="Chad Davis">Chad Davis</option>
-                              <option value="Linda Drake">Linda Drake</option>
-                              <option value="Kathleen Flores">
-                                Kathleen Flores
-                              </option>
-                            </select>
-                          </div>
-                          <div className="mb-5">
-                            <label htmlFor="tag">Status</label>
-                            <select
-                              id="tag"
-                              className="form-select"
-                              value={params.status}
-                              onChange={(e) => changeValue(e)}
-                            >
-                              <option value="">None</option>
-                              <option value="upcoming">Akan Datang</option>
-                              <option value="ongoing">Berlangsung</option>
-                              <option value="done">Selesai</option>
-                            </select>
-                          </div>
-                          {/* <div className="mb-5">
-                            <label htmlFor="desc">Description</label>
-                            <textarea
-                              id="description"
-                              rows={3}
-                              className="form-textarea min-h-[130px] resize-none"
-                              placeholder="Enter Description"
-                              value={params.description}
-                              onChange={(e) => changeValue(e)}
-                            ></textarea>
-                          </div> */}
-                          {/* <div className="mb-5">
-                            <label htmlFor="absent">Absent</label>
-                            <textarea
-                              id="absent"
-                              rows={3}
-                              className="form-textarea min-h-[130px] resize-none"
-                              placeholder="Enter Description"
-                              value={params.absent}
-                              onChange={(e) => changeValue(e)}
-                            ></textarea>
-                          </div> */}
-                          <div className="mt-8 flex items-center justify-end">
-                            <button
-                              type="button"
-                              className="btn btn-outline-danger gap-2"
-                              onClick={() => setAddContactModal(false)}
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-primary ltr:ml-4 rtl:mr-4"
-                              // onClick={saveNote}
-                            >
-                              {params.id ? "Update Note" : "Add Note"}
-                            </button>
-                          </div>
-                        </form>
-                      </div>
-                    </Dialog.Panel>
-                  </Transition.Child>
-                </div>
-              </div>
-            </Dialog>
-          </Transition>
-
-          <Transition appear show={isViewNoteModal} as={Fragment}>
-            <Dialog
-              as="div"
-              open={isViewNoteModal}
-              onClose={() => setIsViewNoteModal(false)}
-              className="relative z-50"
-            >
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0"
-                enterTo="opacity-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0"
-              >
-                <div className="fixed inset-0 bg-[black]/60" />
-              </Transition.Child>
-
-              <div className="fixed inset-0 overflow-y-auto">
-                <div className="flex min-h-full items-center justify-center px-4 py-8">
-                  <Transition.Child
-                    as={Fragment}
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0 scale-95"
-                    enterTo="opacity-100 scale-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100 scale-100"
-                    leaveTo="opacity-0 scale-95"
-                  >
-                    <Dialog.Panel className="panel w-full max-w-lg overflow-hidden rounded-lg border-0 p-0 text-black dark:text-white-dark">
-                      <button
-                        type="button"
-                        onClick={() => setIsViewNoteModal(false)}
-                        className="absolute top-4 text-gray-400 outline-none hover:text-gray-800 ltr:right-4 rtl:left-4 dark:hover:text-gray-600"
-                      >
-                        <IconX />
-                      </button>
-                      <div className="flex flex-wrap items-center gap-2 bg-[#fbfbfb] py-3 text-lg font-medium ltr:pl-5 ltr:pr-[50px] rtl:pl-[50px] rtl:pr-5 dark:bg-[#121c2c]">
-                        <div className="ltr:mr-3 rtl:ml-3">{params.name}</div>
-                        {params.status && (
-                          <button
-                            type="button"
-                            className={`badge badge-outline-primary rounded-3xl capitalize ltr:mr-3 rtl:ml-3 ${
-                              (params.status === "upcoming" && "shadow-primary",
-                              params.status === "ongoing" && "shadow-warning",
-                              params.status === "done" && "shadow-success")
-                            }`}
-                          >
-                            {params.status}
-                          </button>
-                        )}
-                      </div>
-                      <div className="p-5">
-                        {/* <div className="text-base">{params.description}</div> */}
-
-                        <div className="mt-8 ltr:text-right rtl:text-left">
-                          <button
-                            type="button"
-                            className="btn btn-outline-danger"
-                            onClick={() => setIsViewNoteModal(false)}
-                          >
-                            Close
-                          </button>
-                        </div>
-                      </div>
-                    </Dialog.Panel>
-                  </Transition.Child>
-                </div>
-              </div>
-            </Dialog>
-          </Transition>
         </div>
       </div>
     </div>

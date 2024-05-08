@@ -29,10 +29,10 @@ const ComponentsAnnouncement = () => {
 
   const defaultParams = {
     id: 0,
-    senderName: "",
+    sender_name: "",
     subject: "",
     message: "",
-    createdAt: "",
+    created_at: "",
     recipients: [] as Recipient[],
   };
 
@@ -50,20 +50,20 @@ const ComponentsAnnouncement = () => {
           );
           setUsers(users);
           setToken(data.accessToken);
-          setUserId(String(data?.user_id));
+          setUserId(data?.user_id);
           const fetchedMessages: Message[] =
             await announcementService.fetchAllMessage(
               data?.accessToken,
-              String(data.user_id)
+              data?.user_id
             );
-          // Filter and sort messages based on createdAt
+          // Filter and sort messages based on created_at
           const filteredAndSortedMessages = fetchedMessages
-            .filter((message) => message.createdAt) // Filter out messages without a createdAt property
+            .filter((message) => message.created_at) // Filter out messages without a created_at property
             .sort(
               (a, b) =>
-                new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-            ); // Sort messages by createdAt, newest to oldest
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime()
+            ); // Sort messages by created_at, newest to oldest
 
           // Set the filtered and sorted messages to state
           setMessages(filteredAndSortedMessages);
@@ -199,22 +199,15 @@ const ComponentsAnnouncement = () => {
 
   const save = async () => {
     try {
-      const receiverIds: number[] = receiver.map((idString) =>
-        parseInt(idString, 10)
-      );
-
-      const userIdNumber: number = parseInt(userId, 10);
       const data: RequestSendMessage = {
         message: requestMessage,
         subject: requestSubject,
-        recipientIds: receiverIds,
-        senderId: userIdNumber,
+        recipients_ids: receiver,
+        sender_id: userId,
       };
 
-      const receiverNames: Recipient[] = receiver.map((receiverId) => {
-        const recipient = users.find(
-          (user) => user.id === parseInt(receiverId, 10)
-        );
+      receiver.map((receiverId) => {
+        const recipient = users.find((user) => user.id === receiverId);
         return {
           id: recipient ? recipient.id : 0,
           name: recipient ? recipient.name : "",
@@ -396,7 +389,7 @@ const ComponentsAnnouncement = () => {
                             <p
                               className={`whitespace-nowrap font-medium text-white-dark}`}
                             >
-                              {formatDate(message.createdAt)}
+                              {formatDate(message.created_at)}
                             </p>
                           </td>
 

@@ -13,7 +13,7 @@ import { tripService } from "@/app/(default)/trip/api/api";
 import { useSession } from "next-auth/react";
 
 interface Pilgrim {
-  id?: number;
+  id?: string;
   portion_number: string;
   name: string;
   gender: string;
@@ -26,17 +26,17 @@ interface Pilgrim {
 }
 
 interface GuideData {
-  id: number;
+  id: string;
   name: string;
   username: string;
-  phoneNumber: string | null;
+  phone_number: string | null;
   role: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface TripRequestData {
-  picId: number;
+  pic_id?: string;
   name: string;
   date?: Date;
   meeting_point: string;
@@ -45,7 +45,7 @@ interface TripRequestData {
   end?: Date;
   destination: string;
   bus: string;
-  pilgrimsId?: number[];
+  pilgrims_ids?: string[];
 }
 
 const ComponentsTripCreate = () => {
@@ -215,7 +215,6 @@ const ComponentsTripCreate = () => {
   const isFormValid = () => {
     return (
       eventName.trim() !== "" &&
-      guide.trim() !== "" &&
       meetingPoint.trim() !== "" &&
       destination.trim() !== "" &&
       bus.trim() !== "" &&
@@ -227,16 +226,16 @@ const ComponentsTripCreate = () => {
   };
 
   const logicSubmitButton = () => {
-    const pilgrimIds: number[] =
+    const pilgrimIds: string[] =
       selectedPilgrim
         ?.map((pilgrim) => pilgrim.id)
-        .filter((id): id is number => typeof id === "number") ?? [];
+        .filter((id): id is string => typeof id === "number") ?? [];
     const parsedDate = date ? new Date(date) : undefined;
     const parsedStandByDate = standByDate ? new Date(standByDate) : undefined;
     const parsedStartDate = startDate ? new Date(startDate) : undefined;
     const parsedEndDate = endDate ? new Date(endDate) : undefined;
     const tripRequestData: TripRequestData = {
-      picId: parseInt(guide),
+      ...(guide ? { pic_id: guide } : {}),
       name: eventName,
       date: parsedDate,
       meeting_point: meetingPoint,
@@ -245,7 +244,7 @@ const ComponentsTripCreate = () => {
       end: parsedEndDate,
       destination: destination,
       bus: bus,
-      pilgrimsId: pilgrimIds,
+      pilgrims_ids: pilgrimIds,
     };
     const createTrip = async () => {
       try {

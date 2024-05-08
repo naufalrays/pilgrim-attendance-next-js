@@ -1,31 +1,31 @@
 interface User {
-  id: number;
+  id: string;
   name: string;
   username: string;
   phone_number: string | null;
   role: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface Recipient {
-  id: number;
+  id: string;
   name: string;
 }
 
 interface Message {
   id: number;
-  senderId: number;
-  senderName?: string;
+  sender_id: string;
+  sender_name?: string;
   subject: string;
   message: string;
-  createdAt: string;
+  created_at: string;
   recipients: Recipient[];
 }
 
 interface RequestSendMessage {
-    senderId: number;
-    recipientIds: number[];
+    sender_id: string;
+    recipients_ids: string[];
     subject: string;
     message: string;
   }

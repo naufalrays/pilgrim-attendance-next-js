@@ -37,8 +37,6 @@ const authOptions: NextAuthOptions = {
           },
         });
         if (res.status == 401) {
-          console.log(res.statusText);
-
           return null;
         }
         const user = await res.json();

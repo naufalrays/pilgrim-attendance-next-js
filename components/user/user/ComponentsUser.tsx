@@ -20,8 +20,8 @@ interface Account {
   password: string;
   phone_number?: string;
   role: string;
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 const ComponentsAccount = () => {
   const { data } = useSession();

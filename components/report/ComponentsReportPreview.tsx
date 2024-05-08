@@ -1,8 +1,5 @@
 "use client";
-import Link from "next/link";
 import React, { Fragment, useEffect, useState } from "react";
-import IconPlus from "../icon/IconPlus";
-import IconEdit from "../icon/IconEdit";
 import { tripService } from "@/app/(default)/trip/api/api";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
@@ -11,8 +8,10 @@ import IconX from "../icon/IconX";
 import Swal from "sweetalert2";
 import { reportService } from "@/app/(default)/report/api/api";
 import {
+  BusList,
   Pilgrim,
-  ResponseUpdateAttendancePilgrim,
+  RequestChangeBus,
+  RequestUpdateAttendancePilgrim,
   TripResponseData,
 } from "@/interfaces/reports/types";
 
@@ -37,6 +36,7 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
 
   const [tripData, setTripData] = useState<TripResponseData>();
   const [pilgrims, setPilgrimsData] = useState<Pilgrim[]>([]);
+  const [busList, setBusList] = useState<BusList[]>([]);
   const [params, setParams] = useState<any>(
     JSON.parse(JSON.stringify(defaultPilgrim))
   );
@@ -44,8 +44,11 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
   // Absensi
   const [isShowAttendanceMenu, setIsShowAttendanceMenu] = useState(false);
   const [addAttendanceModal, setAddAttandanceModal] = useState(false);
+  const [changeBusModal, setChangeBusModal] = useState(false);
+
   // Tampilkan Masukkan Alasan
   const [checkInReason, setCheckInReason] = useState("");
+  const [busId, setBusId] = useState("");
   const [checkOutReason, setCheckOutReason] = useState("");
   const [reason, setReason] = useState("");
 
@@ -83,6 +86,13 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
     setAddAttandanceModal(true);
   };
 
+  // Show Dialog change BUS
+  const chageBus = (pilgrim: Pilgrim) => {
+    let json = JSON.parse(JSON.stringify(pilgrim));
+    setParams(json);
+    setChangeBusModal(true);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -96,6 +106,13 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
           }
           if (tripData.pilgrims) {
             setPilgrimsData(tripData.pilgrims);
+          }
+          const busList: BusList[] = await tripService.fetchBusDataById(
+            tripId,
+            data?.accessToken
+          );
+          if (busList) {
+            setBusList(busList);
           }
         }
       } catch (error) {
@@ -159,7 +176,7 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
   ];
 
   const saveAttendance = async () => {
-    const data: ResponseUpdateAttendancePilgrim = {
+    const data: RequestUpdateAttendancePilgrim = {
       checkIn: checkInReason,
       checkOut: checkOutReason,
       reason: shouldShowInput ? reason : "",
@@ -176,10 +193,26 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
     setAddAttandanceModal(false);
   };
 
+  const isChangeBusValid = () => {
+    return busId.trim() !== "";
+  };
+
+  const saveChangeBus = async () => {
+    if (busId) {
+      const data: RequestChangeBus = {
+        current_trip_id: tripData?.id ?? "",
+        new_trip_id: busId,
+        pilgrim_id: params.id,
+      };
+      await changeBus(data, params.id);
+    }
+    setChangeBusModal(false);
+  };
+
   const postAttendance = async (
     tripId: string,
     pilgrimId: string,
-    data: ResponseUpdateAttendancePilgrim
+    data: RequestUpdateAttendancePilgrim
   ) => {
     try {
       await reportService.updateAttendancePilgrimById(
@@ -190,7 +223,7 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
       );
       // Perbarui data jamaah di client
       const updatedPilgrims = pilgrims.map((pilgrim) => {
-        if (pilgrim.id === +pilgrimId) {
+        if (pilgrim.id === pilgrimId) {
           return {
             ...pilgrim,
             check_in: data.checkIn,
@@ -204,6 +237,21 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
       showMessage("Berhasil mengubah absensi jamaah");
     } catch (error) {
       showMessage("Gagal mengubah absensi jamaah", "error");
+      console.error("Error fetching data:", error);
+      setAddAttandanceModal(false);
+    }
+  };
+
+  const changeBus = async (data: RequestChangeBus, pilgrimId: string) => {
+    try {
+      await reportService.changeBus(data, token);
+      const updatedPilgrims = pilgrims.filter(
+        (pilgrim) => pilgrim.id !== pilgrimId
+      );
+      setPilgrimsData(updatedPilgrims);
+      showMessage("Berhasil memindahkan bis");
+    } catch (error) {
+      showMessage("Gagal memindahkan bis", "error");
       console.error("Error fetching data:", error);
       setAddAttandanceModal(false);
     }
@@ -234,7 +282,9 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
             <div className="space-y-1 text-white-dark">
               <div>Pemandu:</div>
               <div className="font-semibold text-black dark:text-white">
-                {tripData?.picName}
+                {tripData?.pic_name
+                  ? tripData.pic_name
+                  : "Belum ada pembimbing"}
               </div>
             </div>
           </div>
@@ -377,10 +427,17 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
                     <td>
                       <div className="mx-auto flex w-max items-center gap-4">
                         <button
-                          className="flex hover:text-info"
+                          type="button"
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => chageBus(pilgrim)}
+                        >
+                          Pindah Bis
+                        </button>
+                        <button
+                          className="border border-green-500 rounded-md py-1 px-2 text-green-500 hover:bg-green-500 hover:text-white"
                           onClick={() => addEditAttendance(pilgrim)}
                         >
-                          <IconEdit className="h-4.5 w-4.5" />
+                          Absen Jamaah
                         </button>
                       </div>
                     </td>
@@ -497,6 +554,93 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
                           type="button"
                           className="btn btn-primary ml-4"
                           onClick={() => saveAttendance()}
+                        >
+                          Update
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      <Transition appear show={changeBusModal} as={Fragment}>
+        <Dialog
+          as="div"
+          open={changeBusModal}
+          onClose={() => setChangeBusModal(false)}
+          className="relative z-50"
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-[black]/60" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center px-4 py-8">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="panel w-full max-w-lg overflow-hidden rounded-lg border-0 p-0 text-black dark:text-white-dark">
+                  <button
+                    type="button"
+                    onClick={() => setChangeBusModal(false)}
+                    className="absolute top-4 text-gray-400 outline-none hover:text-gray-800 ltr:right-4 rtl:left-4 dark:hover:text-gray-600"
+                  >
+                    <IconX />
+                  </button>
+                  <div className="bg-[#fbfbfb] py-3 text-lg font-medium ltr:pl-5 ltr:pr-[50px] rtl:pl-[50px] rtl:pr-5 dark:bg-[#121c2c]">
+                    Pindah Bis
+                  </div>
+                  <div className="p-5">
+                    <form>
+                      <div className="mb-5 flex justify-between gap-4">
+                        <div className="flex-1">
+                          <label htmlFor="tag">Bis</label>
+                          <select
+                            id="tag"
+                            className="form-select"
+                            value={busId}
+                            onChange={(event) => setBusId(event.target.value)}
+                          >
+                            <option value="">Pilih Bis</option>
+                            {busList.map((bus) => (
+                              <option key={bus.id} value={bus.id}>
+                                Bis {bus.bus} - {bus.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="mt-8 flex items-center justify-end ltr:text-right rtl:text-left">
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger"
+                          onClick={() => setChangeBusModal(false)}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary ml-4"
+                          disabled={!isChangeBusValid()}
+                          onClick={() => saveChangeBus()}
                         >
                           Update
                         </button>

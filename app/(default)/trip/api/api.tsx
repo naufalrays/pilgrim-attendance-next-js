@@ -53,7 +53,7 @@ export const tripService = {
 
   fetchTripDataById: async (tripId: string, token: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/trip/${tripId}`, {
+      const response = await fetch(`${Backend_URL}/trip/id/${tripId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -71,7 +71,7 @@ export const tripService = {
   },
 
   deleteTrip: async (id: any, token: string) => {
-    const response = await fetch(`${Backend_URL}/trip/${id}`, {
+    const response = await fetch(`${Backend_URL}/trip/id/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -84,7 +84,7 @@ export const tripService = {
   },
 
   updateTrip: async (tripId: string, data: any, token: string) => {
-    const response = await fetch(`${Backend_URL}/trip/${tripId}`, {
+    const response = await fetch(`${Backend_URL}/trip/id/${tripId}`, {
       method: "PATCH",
       body: JSON.stringify(data),
       headers: {
@@ -107,12 +107,31 @@ export const tripService = {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(`response`)
       if (!response.ok) {
         throw new Error("Gagal memperbaharui data");
       }
     } catch (error) {
       throw new Error("Gagal memperbaharui data");
+    }
+  },
+
+
+  fetchBusDataById: async (tripId: string, token: string) => {
+    try {
+      const response = await fetch(`${Backend_URL}/trip/bus/${tripId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      const responseData = await response.json();
+      const tripData = responseData.data;
+      return tripData;
+    } catch (error) {
+      console.error("Error fetching trip data:", error);
+      throw error;
     }
   },
 };

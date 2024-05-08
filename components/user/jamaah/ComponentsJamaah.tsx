@@ -70,7 +70,6 @@ const ComponentsJamaah = () => {
   }, [data?.accessToken]);
 
   const changeValue = (e: any) => {
-    console.log(e);
     if (e[0] instanceof Date) {
       setParams({ ...params, birth_date: e[0] });
     } else {
@@ -95,7 +94,6 @@ const ComponentsJamaah = () => {
   ]);
 
   const searchContact = () => {
-    console.log("asdsa");
     setFilteredItems(() => {
       return pilgrims.filter((item: any) => {
         return item.name.toLowerCase().includes(search.toLowerCase());
@@ -240,29 +238,34 @@ const ComponentsJamaah = () => {
       unit: "cm",
       format: "a4",
     });
-  
-    const margin = 1; // Margin halaman dalam cm
-    const nametagWidth = 8.5; // Lebar nametag dalam cm
-    const nametagHeight = 5.5; // Tinggi nametag dalam cm
+
+    const margin = 0.5; // Margin halaman dalam cm
+    const nametagWidth = 5.5; // Lebar nametag dalam cm
+    const nametagHeight = 8.5; // Tinggi nametag dalam cm
     const pageWidth = doc.internal.pageSize.getWidth() - margin * 2; // Lebar halaman dalam cm
     const pageHeight = doc.internal.pageSize.getHeight() - margin * 2; // Tinggi halaman dalam cm
     let x = margin; // Posisi x awal
     let y = margin; // Posisi y awal
-    console.log(`lengthny ${pilgrims.length}`);
-  
-    pilgrims.forEach((pilgrim :Pilgrim, index :number) => {
+
+    // Loop melalui setiap jamaah
+    for (let i = 0; i < pilgrims.length; i++) {
+      // Tunggu sampai QR code selesai dibuat
+      const qrCodeDataURL = await generateQRCodeDataUrl(
+        pilgrims[i].portion_number
+      );
+
       // Tambahkan nametag
-      doc.text(pilgrim.name, x, y, { align: "center" });
-  
+      addNametag(doc, pilgrims[i], x, y, qrCodeDataURL);
+
       // Perbarui posisi x dan y
       x += nametagWidth + margin;
-  
+
       // Cek apakah masih muat di samping
       if (x + nametagWidth > pageWidth) {
         // Jika tidak muat, pindah ke baris baru
         x = margin;
         y += nametagHeight + margin;
-  
+
         // Cek apakah masih muat di halaman ini
         if (y + nametagHeight > pageHeight) {
           // Jika tidak muat, tambahkan halaman baru
@@ -271,49 +274,60 @@ const ComponentsJamaah = () => {
           y = margin;
         }
       }
-    });
-  
+    }
     doc.save("nametags.pdf");
   };
-  
-  const addNametag = async (doc: any, pilgrim: Pilgrim, x : any, y :any) => {
-    const qrCodeDataURL = await QRCode.toDataURL(
-      `${Backend_URL}/pilgrim/${pilgrim.portion_number}`,
-      { errorCorrectionLevel: "H", type: "image/jpeg", margin: 0 }
-    );
-  
+
+  // Fungsi untuk menghasilkan QR code data URL
+  const generateQRCodeDataUrl = async (portionNumber: string) => {
+    return await QRCode.toDataURL(`${Backend_URL}/pilgrim/${portionNumber}`, {
+      errorCorrectionLevel: "H",
+      type: "image/jpeg",
+      margin: 0,
+    });
+  };
+
+  const addNametag = async (
+    doc: any,
+    pilgrim: Pilgrim,
+    x: any,
+    y: any,
+    qrCodeDataURL: string
+  ) => {
+    doc.rect(x, y, 5.5, 8.5); // Membuat border dengan ukuran yang sama dengan nametag
     // Tambahkan background
-    doc.addImage(
-      "/assets/images/pdf-background.png",
-      "PNG",
-      x,
-      y,
-      8.5,
-      5.5
-    );
-  
+    doc.addImage("/assets/images/pdf-background.png", "PNG", x, y, 5.5, 8.5);
+
     // Menghitung posisi horizontal dan vertikal tengah
-    const centerX = x + 8.5 / 2;
-    const centerY = y + 5.5 / 2;
-  
-    // Teks "KBIH TARBIS"
+    const centerX = x + 5.5 / 2;
+    const centerY = y + 8.5 / 2;
+
+    // Teks "KBIHU TARBIS"
     doc.setTextColor("#ffffff"); // Mengatur warna teks menjadi putih
     doc.setFontSize(11); // Mengatur ukuran font menjadi 12
-    doc.text("KBIH TARBIS", centerX, y + 0.6, { align: "center" });
-  
+    doc.text("KBIHU TARBIS", centerX, y + 0.6, { align: "center" });
+
     // Nama Jamaah
     doc.setTextColor("#000000"); // Mengatur warna teks menjadi hitam
     doc.setFontSize(6); // Mengatur ukuran font menjadi 12
     doc.text(pilgrim.name, centerX, y + 5, { align: "center" });
-  
+
     // Nomor Porsi Jamaah
     doc.text(pilgrim.portion_number, centerX, y + 5.28, { align: "center" });
-  
+
+
     // QR Code
     doc.setTextColor("#ffffff"); // Mengatur warna teks menjadi putih
     doc.setFontSize(3.6); // Mengatur ukuran font menjadi 12
-    doc.addImage(qrCodeDataURL, "JPEG", centerX - 0.7, y + 5.4, 1.4, 1.4);
-  
+    doc.addImage(
+      qrCodeDataURL,
+      "JPEG",
+      centerX - 0.7,
+      y + 5.4,
+      1.4,
+      1.4
+    );
+
     // Alamat
     doc.text(
       "Jl. Raya Jagakarsa Jl. H. Sa Amah No.45 7, RT.7/RW.4, Jagakarsa, \nKec. Jagakarsa, Kota Jakarta Selatan, DKI Jakarta 12620",
@@ -321,17 +335,20 @@ const ComponentsJamaah = () => {
       y + 7.8,
       { align: "center" }
     );
-  
+
     // Kontak
     doc.setFontSize(5); // Mengatur ukuran font menjadi 12
-    doc.text("Kontak : Abdul Holik Muhidin (+62 8118741217)", centerX, y + 8.3, {
-      align: "center",
-    });
+    doc.text(
+      "Kontak : Abdul Holik Muhidin (+62 8118741217)",
+      centerX,
+      y + 8.3,
+      {
+        align: "center",
+      }
+    );
   };
-  
-  
+
   // Panggil downloadAllPilgrim saat tombol "Cetak Semua Jamaah" ditekan
-  
 
   const downloadPDF = async (id: number) => {
     const doc = new jsPDF({
@@ -353,7 +370,7 @@ const ComponentsJamaah = () => {
 
     doc.setTextColor("#ffffff"); // Mengatur warna teks menjadi putih
     doc.setFontSize(11); // Mengatur ukuran font menjadi 12
-    doc.text("KBIH TARBIS", centerX, 0.6, { align: "center" });
+    doc.text("KBIHU TARBIS", centerX, 0.6, { align: "center" });
 
     doc.setTextColor("#000000"); // Mengatur warna teks menjadi hitam
     doc.setFontSize(6); // Mengatur ukuran font menjadi 12
@@ -406,16 +423,16 @@ const ComponentsJamaah = () => {
                 Tambahkan Jamaah
               </button>
             </div>
-            {/* <div>
+            <div>
               <button
                 type="button"
                 className="btn btn-primary"
                 onClick={() => downloadAllPilgrim()}
               >
-               <IconPrinter className="ltr:mr-2 rtl:ml-2"/>
-               Cetak Semua Jamaah
+                <IconPrinter className="ltr:mr-2 rtl:ml-2" />
+                Cetak Semua Jamaah
               </button>
-            </div> */}
+            </div>
           </div>
           <div className="relative">
             <input
@@ -434,76 +451,75 @@ const ComponentsJamaah = () => {
           </div>
         </div>
       </div>
-        <div className="panel mt-5 overflow-hidden border-0 p-0">
-          <div className="table-responsive">
-            <table className="table-striped table-hover">
-              <thead>
-                <tr>
-                  <th>No. Porsi</th>
-                  <th>Nama</th>
-                  <th>Jenis Kelamin</th>
-                  <th>Tanggal Lahir</th>
-                  <th>No. Telepon</th>
-                  <th>Rombongan</th>
-                  <th>Kloter</th>
-                  <th>No. Passport</th>
-                  <th className="!text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.map((pilgrim: Pilgrim, index: number) => {
-                  return (
-                    <tr key={pilgrim.id}>
-                      <td>{pilgrim.portion_number}</td>
-                      <td>
-                        <div>{pilgrim.name}</div>
-                      </td>
-                      <td className="whitespace-nowrap">
-                        {pilgrim.gender == "M" ? "Laki-Laki" : "Perempuan"}
-                      </td>
-                      <td className="whitespace-nowrap">
-                        {pilgrim ? formatDate(pilgrim.birth_date) : "-"}
-                      </td>
-                      <td className="whitespace-nowrap">
-                        {pilgrim.phone_number}
-                      </td>
-                      <td className="whitespace-nowrap">{pilgrim.group}</td>
-                      <td className="whitespace-nowrap">{pilgrim.cloter}</td>
-                      <td className="whitespace-nowrap">
-                        {pilgrim.passport_number}
-                      </td>
-                      <td>
-                        <div className="flex items-center justify-center gap-4">
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-primary"
-                            onClick={() => editUser(pilgrim)}
-                          >
-                            Ubah
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => deleteUser(pilgrim.id)}
-                          >
-                            Hapus
-                          </button>
-                          <button
-                            className="border border-green-500 rounded-md py-1 px-2 text-green-500 hover:bg-green-500 hover:text-white"
-                            onClick={() => downloadPDF(index)}
-                          >
-                            Unduh
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+      <div className="panel mt-5 overflow-hidden border-0 p-0">
+        <div className="table-responsive">
+          <table className="table-striped table-hover">
+            <thead>
+              <tr>
+                <th>No. Porsi</th>
+                <th>Nama</th>
+                <th>Jenis Kelamin</th>
+                <th>Tanggal Lahir</th>
+                <th>No. Telepon</th>
+                <th>Rombongan</th>
+                <th>Kloter</th>
+                <th>No. Passport</th>
+                <th className="!text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredItems.map((pilgrim: Pilgrim, index: number) => {
+                return (
+                  <tr key={pilgrim.id}>
+                    <td>{pilgrim.portion_number}</td>
+                    <td>
+                      <div>{pilgrim.name}</div>
+                    </td>
+                    <td className="whitespace-nowrap">
+                      {pilgrim.gender == "M" ? "Laki-Laki" : "Perempuan"}
+                    </td>
+                    <td className="whitespace-nowrap">
+                      {pilgrim ? formatDate(pilgrim.birth_date) : "-"}
+                    </td>
+                    <td className="whitespace-nowrap">
+                      {pilgrim.phone_number}
+                    </td>
+                    <td className="whitespace-nowrap">{pilgrim.group}</td>
+                    <td className="whitespace-nowrap">{pilgrim.cloter}</td>
+                    <td className="whitespace-nowrap">
+                      {pilgrim.passport_number}
+                    </td>
+                    <td>
+                      <div className="flex items-center justify-center gap-4">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => editUser(pilgrim)}
+                        >
+                          Ubah
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => deleteUser(pilgrim.id)}
+                        >
+                          Hapus
+                        </button>
+                        <button
+                          className="border border-green-500 rounded-md py-1 px-2 text-green-500 hover:bg-green-500 hover:text-white"
+                          onClick={() => downloadPDF(index)}
+                        >
+                          Unduh
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-
+      </div>
 
       <Transition appear show={addContactModal} as={Fragment}>
         <Dialog
@@ -592,6 +608,8 @@ const ComponentsJamaah = () => {
                           options={{
                             dateFormat: "d-m-Y",
                             position: "auto left",
+                            defaultDate: new Date(1990, 0, 1),
+                            maxDate: new Date(new Date().setFullYear(new Date().getFullYear() - 2)),
                           }}
                           placeholder="Pilih Tanggal Lahir"
                           className="form-input"

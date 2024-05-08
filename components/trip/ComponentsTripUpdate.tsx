@@ -18,9 +18,9 @@ import { tripService } from "@/app/(default)/trip/api/api";
 import { useSession } from "next-auth/react";
 
 interface TripResponseData {
-  picId: number;
+  pic_id: number;
   name: string;
-  picName: string;
+  pic_name: string;
   date?: Date;
   meeting_point: string;
   stand_by?: Date;
@@ -32,7 +32,7 @@ interface TripResponseData {
 }
 
 interface Pilgrim {
-  id?: number;
+  id?: string;
   portion_number: string;
   name: string;
   gender: string;
@@ -44,17 +44,17 @@ interface Pilgrim {
 }
 
 interface GuideData {
-  id: number;
+  id: string;
   name: string;
   username: string;
   phoneNumber: string | null;
   role: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface TripRequestData {
-  picId?: number;
+  pic_id?: string;
   name: string;
   date?: Date;
   meeting_point: string;
@@ -63,7 +63,7 @@ interface TripRequestData {
   end?: Date;
   destination: string;
   bus: string;
-  pilgrimsId?: number[];
+  pilgrims_ids?: string[];
 }
 
 const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
@@ -112,18 +112,16 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
           setResponseData(tripData);
           setToken(data?.accessToken)
           if (tripData) {
-            console.log(`check eventname ${tripData.name}`);
             setEventName(tripData.name);
             setMeetingPoint(tripData.meeting_point);
             setMeetingPoint(tripData.meeting_point);
             setDestination(tripData.destination);
             setBus(tripData.bus);
             setDate(tripData.date);
-            setGuide(`${tripData.picId}`);
+            setGuide(`${tripData.pic_id}`);
             setStandByDate(tripData.stand_by);
             setStartDate(tripData.start);
             setEndDate(tripData.end);
-            console.log(`start ${tripData.start}`);
             if (tripData.pilgrims) {
               setSelectedPilgrim(tripData.pilgrims);
             }
@@ -263,7 +261,6 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
   const isFormValid = () => {
     return (
       eventName.trim() !== "" &&
-      guide.trim() !== "" &&
       meetingPoint.trim() !== "" &&
       destination.trim() !== "" &&
       bus.trim() !== "" &&
@@ -275,16 +272,16 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
   };
 
   const logicSubmitButton = () => {
-    const pilgrimsId: number[] =
+    const pilgrimsId: string[] =
       selectedPilgrim
         ?.map((pilgrim) => pilgrim.id)
-        .filter((id): id is number => typeof id === "number") ?? [];
+        .filter((id): id is string => typeof id === "string") ?? [];
     const parsedDate = date ? new Date(date) : undefined;
     const parsedStandByDate = standByDate ? new Date(standByDate) : undefined;
     const parsedStartDate = startDate ? new Date(startDate) : undefined;
     const parsedEndDate = endDate ? new Date(endDate) : undefined;
     const tripRequestData: TripRequestData = {
-      picId: 1,
+      ...(guide ? { pic_id: guide } : {}),
       name: eventName,
       date: parsedDate,
       meeting_point: meetingPoint,
@@ -293,7 +290,7 @@ const ComponentsTripUpdate: React.FC<{ tripId: string }> = ({ tripId }) => {
       end: parsedEndDate,
       destination: destination,
       bus: bus,
-      pilgrimsId: pilgrimsId,
+      pilgrims_ids: pilgrimsId,
     };
     const updateTrip = async () => {
       try {

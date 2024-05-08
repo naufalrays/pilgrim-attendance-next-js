@@ -1,4 +1,4 @@
-import { ResponseUpdateAttendancePilgrim } from "@/interfaces/reports/types";
+import { RequestUpdateAttendancePilgrim } from "@/interfaces/reports/types";
 import { Backend_URL } from "@/lib/Constants";
 
 export const announcementService = {

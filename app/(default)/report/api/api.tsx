@@ -1,5 +1,6 @@
-import { ResponseUpdateAttendancePilgrim } from "@/interfaces/reports/types";
+import { RequestUpdateAttendancePilgrim } from "@/interfaces/reports/types";
 import { Backend_URL } from "@/lib/Constants";
+import { RequestChangeBus } from '../../../../interfaces/reports/types';
 
 export const reportService = {
 
@@ -21,7 +22,7 @@ export const reportService = {
     }
   },
 
-  updateAttendancePilgrimById: async (tripId:string,pilgrimId: string,data: ResponseUpdateAttendancePilgrim, token: string) => {
+  updateAttendancePilgrimById: async (tripId:string,pilgrimId: string,data: RequestUpdateAttendancePilgrim, token: string) => {
     try {
       const response = await fetch(`${Backend_URL}/trip/${tripId}/pilgrim/${pilgrimId}`, {
         method: "PATCH",
@@ -56,6 +57,28 @@ export const reportService = {
       return responseData.data;
     } catch (error) {
       console.error("Error fetching trip data:", error);
+      throw error;
+    }
+  },
+
+
+  changeBus: async (data: RequestChangeBus, token: string) => {
+    try {
+      const response = await fetch(`${Backend_URL}/trip/changeTrip`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        throw new Error("Gagal memindahkan Bis");
+      }
+      const responseData = await response.json();
+      return responseData.data;
+    } catch (error) {
+      console.error("Gagal memindahkan Bis:", error);
       throw error;
     }
   },
