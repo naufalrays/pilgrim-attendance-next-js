@@ -17,7 +17,7 @@ import { Backend_URL } from "@/lib/Constants";
 import IconPrinter from "@/components/icon/IconPrinter";
 
 interface Pilgrim {
-  id: number;
+  id: string;
   portion_number: string;
   name: string;
   gender: string;
@@ -203,7 +203,7 @@ const ComponentsJamaah = () => {
     setAddContactModal(true);
   };
 
-  const deleteUser = async (id: number) => {
+  const deleteUser = async (id: string) => {
     if (window.confirm("Apakah kamu yakin ingin menghapus datanya ?")) {
       if (id) {
         try {
@@ -251,7 +251,7 @@ const ComponentsJamaah = () => {
     for (let i = 0; i < pilgrims.length; i++) {
       // Tunggu sampai QR code selesai dibuat
       const qrCodeDataURL = await generateQRCodeDataUrl(
-        pilgrims[i].portion_number
+        pilgrims[i].id
       );
 
       // Tambahkan nametag
@@ -279,8 +279,8 @@ const ComponentsJamaah = () => {
   };
 
   // Fungsi untuk menghasilkan QR code data URL
-  const generateQRCodeDataUrl = async (portionNumber: string) => {
-    return await QRCode.toDataURL(`${Backend_URL}/pilgrim/${portionNumber}`, {
+  const generateQRCodeDataUrl = async (pilgrimId: string) => {
+    return await QRCode.toDataURL(`${Backend_URL}/pilgrim/${pilgrimId}`, {
       errorCorrectionLevel: "H",
       type: "image/jpeg",
       margin: 0,
@@ -384,7 +384,7 @@ const ComponentsJamaah = () => {
     };
 
     const qrCodeDataURL = await QRCode.toDataURL(
-      `${Backend_URL}/pilgrim/${pilgrims[id].portion_number}`,
+      `${Backend_URL}/pilgrim/${pilgrims[id].id}`,
       opts
     );
     const qrCodeImg = new Image();

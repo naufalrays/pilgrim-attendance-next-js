@@ -1,15 +1,11 @@
 "use client";
 import { jamaahService } from "@/app/(default)/user/jamaah/api/api";
-import ComponentsAuthLoginForm from "@/components/auth/ComponentsAuthLogin";
-import { id } from "date-fns/locale";
-import { Metadata } from "next";
 import { useSession } from "next-auth/react";
-import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 type Props = {
   params: {
-    portionNumber: string;
+    pilgrimId: string;
   };
 };
 
@@ -36,8 +32,8 @@ const PilgrimPreview = async (props: Props) => {
       try {
         if (data && data.accessToken) {
           // Fetch trip data
-          const jamaah: Pilgrim = await jamaahService.fetchJamaahByPortionNumber(
-            props.params.portionNumber,
+          const jamaah: Pilgrim = await jamaahService.fetchJamaahById(
+            props.params.pilgrimId,
             data?.accessToken
           );
           setToken(data?.accessToken);
