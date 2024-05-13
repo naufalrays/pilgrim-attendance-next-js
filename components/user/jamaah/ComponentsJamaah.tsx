@@ -15,6 +15,12 @@ import jsPDF from "jspdf";
 import QRCode from "qrcode";
 import { Backend_URL } from "@/lib/Constants";
 import IconPrinter from "@/components/icon/IconPrinter";
+import IconDownload from "@/components/icon/IconDownload";
+import * as XLSX from "xlsx";
+import { setLazyProp } from "next/dist/server/api-utils";
+import { DataTableSortStatus, DataTable } from "mantine-datatable";
+import { sortBy } from "lodash";
+import { id } from "date-fns/locale";
 
 interface Pilgrim {
   id: string;
@@ -30,9 +36,108 @@ interface Pilgrim {
 
 const ComponentsJamaah = () => {
   const { data } = useSession();
+  // Import Excel
+  const [file, setFile] = useState<File | null>();
+  const [jsonData, setJsonData] = useState("");
+  const [previewJsonData, setPreviewJsonData] = useState("");
+  const [importPilgrimModal, setImportPilgrimModal] = useState<any>(false);
+  const [isPreview, setPreviewMode] = useState<any>(false);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedFile = event.target.files?.[0];
+    setFile(uploadedFile);
+  };
+
+  const handleRemoveFile = () => {
+    setFile(null);
+  };
+
+  function previewData() {
+    if (!isPreview) {
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const data = e.target?.result;
+          if (data) {
+            const workbook = XLSX.read(data, { type: "binary" });
+            // SheetName
+            const sheetName = workbook.SheetNames[0];
+            // Worksheet
+            const workSheet = workbook.Sheets[sheetName];
+            // Json
+            const json = XLSX.utils.sheet_to_json(workSheet);
+
+            // Preview
+            setPreviewJsonData(JSON.stringify(json, null, 2));
+          }
+        };
+        reader.readAsBinaryString(file);
+        setPreviewMode(true);
+      }
+    } else {
+      setPreviewMode(false);
+    }
+  }
+
+  const saveMultiplePilgrim = async () => {
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const data = e.target?.result;
+        if (data) {
+          const workbook = XLSX.read(data, { type: "binary" });
+          // SheetName
+          const sheetName = workbook.SheetNames[0];
+          // Worksheet
+          const workSheet = workbook.Sheets[sheetName];
+          // Json
+          const json: Pilgrim[] = XLSX.utils.sheet_to_json(workSheet);
+          // Ubah pola kunci dengan menggunakan indeks
+          const propertyNames = [
+            "portion_number",
+            "name",
+            "gender",
+            "birth_date",
+            "phone_number",
+            "group",
+            "cloter",
+            "passport_number",
+          ];
+          const modifiedJson = json.map((item: any) => {
+            const modifiedItem: any = {};
+            Object.keys(item).forEach((key, index) => {
+              if (propertyNames[index] === "portion_number") {
+                modifiedItem[propertyNames[index]] = String(item[key]); // Mengonversi ke string
+              } else if (propertyNames[index] === "birth_date") {
+                modifiedItem[propertyNames[index]] = `${item[key]}T00:00:00Z`;
+              } else {
+                modifiedItem[propertyNames[index]] = item[key];
+              }
+            });
+            return modifiedItem;
+          });
+          //Save to the DB
+          try {
+            await jamaahService.createMultipleJamaah(modifiedJson, token);
+            records.push(...modifiedJson);
+            setRecords([...records]); // Perbarui records dengan nilai baru
+
+            // Tambahkan modifiedJson ke pilgrims
+            setPilgrims((prevPilgrims) => [...prevPilgrims, ...modifiedJson]); // Perbarui pilgrims dengan nilai baru
+
+            showMessage("Data berhasil ditambahkan");
+          } catch (error) {
+            showMessage(`${error}`, "error");
+          }
+        }
+      };
+      setImportPilgrimModal(false);
+      reader.readAsBinaryString(file);
+    }
+  };
+
   const [addContactModal, setAddContactModal] = useState<any>(false);
-  const [pilgrims, setPilgrim] = useState<Pilgrim[]>([]);
-  const [filteredItems, setFilteredItems] = useState<any>(pilgrims);
+  // const [pilgrims, setPilgrim] = useState<Pilgrim[]>([]);
+  // const [filteredItems, setFilteredItems] = useState<any>(pilgrims);
   const [token, setToken] = useState("");
   const [defaultParams] = useState({
     id: null,
@@ -46,9 +151,32 @@ const ComponentsJamaah = () => {
     passport_number: "",
   });
 
+  // Table
+  const [page, setPage] = useState(1);
+  const PAGE_SIZES = [10, 20, 30, 50, 100];
+  const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
+  const [initialRecords, setInitialRecords] = useState<Pilgrim[]>([]);
+  const [pilgrims, setPilgrims] = useState<Pilgrim[]>([]);
+  const [records, setRecords] = useState(initialRecords);
+  const [selectedRecords, setSelectedRecords] = useState<any>([]);
+  const [search, setSearch] = useState("");
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
+    columnAccessor: "name",
+    direction: "asc",
+  });
+
   const [params, setParams] = useState<any>(
     JSON.parse(JSON.stringify(defaultParams))
   );
+
+  const addPilgrimToRecords = (newPilgrim: any) => {
+    // Tambahkan newPilgrim ke records menggunakan concat atau operasi spread
+    const updatedRecords = [...pilgrims, newPilgrim];
+    // Set records baru
+    setRecords(updatedRecords);
+    setInitialRecords(updatedRecords);
+    setPilgrims(updatedRecords);
+  };
 
   useEffect(() => {
     const fetchPilgrimData = async () => {
@@ -57,8 +185,8 @@ const ComponentsJamaah = () => {
           const response = await jamaahService.fetchJamaahData(
             data.accessToken
           );
-          setPilgrim(response);
-          setFilteredItems(response);
+          setPilgrims(response);
+          setInitialRecords(sortBy(response, "name"));
           setToken(data?.accessToken);
         }
       } catch (error) {
@@ -69,6 +197,37 @@ const ComponentsJamaah = () => {
     fetchPilgrimData();
   }, [data?.accessToken]);
 
+  // Table
+
+  useEffect(() => {
+    setPage(1);
+  }, [pageSize]);
+
+  useEffect(() => {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize;
+    setRecords([...initialRecords.slice(from, to)]);
+  }, [page, pageSize, initialRecords]);
+
+  useEffect(() => {
+    setInitialRecords(() => {
+      return pilgrims.filter((pilgrim) => {
+        return (
+          pilgrim.name.toLowerCase().includes(search.toLowerCase()) ||
+          pilgrim.gender.toLowerCase().includes(search.toLowerCase()) ||
+          pilgrim.group.toLowerCase().includes(search.toLowerCase()) ||
+          pilgrim.cloter.toLowerCase().includes(search.toLowerCase())
+        );
+      });
+    });
+  }, [search]);
+
+  useEffect(() => {
+    const data2 = sortBy(initialRecords, sortStatus.columnAccessor);
+    setRecords(sortStatus.direction === "desc" ? data2.reverse() : data2);
+    setPage(1);
+  }, [sortStatus]);
+
   const changeValue = (e: any) => {
     if (e[0] instanceof Date) {
       setParams({ ...params, birth_date: e[0] });
@@ -78,7 +237,6 @@ const ComponentsJamaah = () => {
     }
   };
 
-  const [search, setSearch] = useState<any>("");
   const [contactList] = useState<any>([
     {
       id: 1,
@@ -93,21 +251,21 @@ const ComponentsJamaah = () => {
     },
   ]);
 
-  const searchContact = () => {
-    setFilteredItems(() => {
-      return pilgrims.filter((item: any) => {
-        return item.name.toLowerCase().includes(search.toLowerCase());
-      });
-    });
-  };
+  // const searchContact = () => {
+  //   setFilteredItems(() => {
+  //     return pilgrims.filter((item: any) => {
+  //       return item.name.toLowerCase().includes(search.toLowerCase());
+  //     });
+  //   });
+  // };
 
   const formatDate = (date: Date) => {
     return format(new Date(date), "dd MMMM yyyy");
   };
 
-  useEffect(() => {
-    searchContact();
-  }, [search]);
+  // useEffect(() => {
+  //   searchContact();
+  // }, [search]);
 
   const saveUser = async () => {
     if (!params.portion_number) {
@@ -148,7 +306,7 @@ const ComponentsJamaah = () => {
       // update Pilgrim
       try {
         await jamaahService.updateJamaah(params.id, params, token);
-        let pilgrim: any = filteredItems.find((d: any) => d.id === params.id);
+        let pilgrim: any = records.find((d: any) => d.id === params.id);
         pilgrim.portion_number = params.portion_number;
         pilgrim.name = params.name;
         pilgrim.gender = params.gender;
@@ -163,11 +321,11 @@ const ComponentsJamaah = () => {
       }
     } else {
       //add Pilgrim
-      let maxUserId = filteredItems.length
-        ? filteredItems.reduce(
+      let maxUserId = records.length
+        ? records.reduce(
             (max: any, character: any) =>
               character.id > max ? character.id : max,
-            filteredItems[0].id
+            records[0].id
           )
         : 0;
 
@@ -183,7 +341,7 @@ const ComponentsJamaah = () => {
       };
       try {
         await jamaahService.createJamaah(pilgrim, token);
-        filteredItems.splice(0, 0, pilgrim);
+        addPilgrimToRecords(pilgrim);
         showMessage("Data berhasil ditambahkan");
       } catch (error) {
         showMessage("Gagal menambahkan data", "error");
@@ -193,23 +351,48 @@ const ComponentsJamaah = () => {
     setAddContactModal(false);
   };
 
-  const editUser = (pilgrim: any = null) => {
+  const editUser = (id: any = null) => {
     const json = JSON.parse(JSON.stringify(defaultParams));
     setParams(json);
-    if (pilgrim) {
-      let json1 = JSON.parse(JSON.stringify(pilgrim));
+
+    const foundPilgrim = pilgrims.find((pilgrim) => pilgrim.id === id);
+    if (foundPilgrim) {
+      const json1 = JSON.parse(JSON.stringify(foundPilgrim));
       setParams(json1);
     }
+
     setAddContactModal(true);
   };
 
-  const deleteUser = async (id: string) => {
+  const importExcel = (pilgrim: any = null) => {
+    // const json = JSON.parse(JSON.stringify(defaultParams));
+    // setParams(json);
+    // if (pilgrim) {
+    //   let json1 = JSON.parse(JSON.stringify(pilgrim));
+    //   setParams(json1);
+    // }
+    setFile(null);
+    setPreviewMode(false);
+    setImportPilgrimModal(true);
+  };
+
+  const deleteUser = async (portion_number: string) => {
     if (window.confirm("Apakah kamu yakin ingin menghapus datanya ?")) {
       if (id) {
         try {
-          await jamaahService.deleteJamaah(id, token);
+
+          await jamaahService.deleteJamaahByPortionNumber(portion_number, token);
           showMessage("Berhasil menghapus data");
-          setFilteredItems(filteredItems.filter((d: any) => d.id !== id));
+          setRecords(pilgrims.filter((d: any) => d.portion_number !== portion_number));
+          setInitialRecords(pilgrims.filter((d: any) => d.portion_number !== portion_number));
+          setPilgrims(pilgrims.filter((d: any) => d.portion_number !== portion_number));
+          setSelectedRecords([]);
+          setSearch("");
+          if (records.length == 1) {
+            if (page != 0) {
+              setPage(page - 1);
+            }
+          }
         } catch (error) {
           showMessage("Gagal menghapus data", "error");
         }
@@ -250,9 +433,7 @@ const ComponentsJamaah = () => {
     // Loop melalui setiap jamaah
     for (let i = 0; i < pilgrims.length; i++) {
       // Tunggu sampai QR code selesai dibuat
-      const qrCodeDataURL = await generateQRCodeDataUrl(
-        pilgrims[i].id
-      );
+      const qrCodeDataURL = await generateQRCodeDataUrl(pilgrims[i].id);
 
       // Tambahkan nametag
       addNametag(doc, pilgrims[i], x, y, qrCodeDataURL);
@@ -315,18 +496,10 @@ const ComponentsJamaah = () => {
     // Nomor Porsi Jamaah
     doc.text(pilgrim.portion_number, centerX, y + 5.28, { align: "center" });
 
-
     // QR Code
     doc.setTextColor("#ffffff"); // Mengatur warna teks menjadi putih
     doc.setFontSize(3.6); // Mengatur ukuran font menjadi 12
-    doc.addImage(
-      qrCodeDataURL,
-      "JPEG",
-      centerX - 0.7,
-      y + 5.4,
-      1.4,
-      1.4
-    );
+    doc.addImage(qrCodeDataURL, "JPEG", centerX - 0.7, y + 5.4, 1.4, 1.4);
 
     // Alamat
     doc.text(
@@ -350,7 +523,14 @@ const ComponentsJamaah = () => {
 
   // Panggil downloadAllPilgrim saat tombol "Cetak Semua Jamaah" ditekan
 
-  const downloadPDF = async (id: number) => {
+  const downloadPDF = async (id: string) => {
+    const selectedPilgrim = pilgrims.find((pilgrim) => pilgrim.id === id);
+    if (!selectedPilgrim) {
+      // Jika tidak ada objek pilgrim dengan id yang sesuai, beri tahu pengguna atau tangani kesalahan
+      console.error("Pilgrim not found!");
+      return;
+    }
+
     const doc = new jsPDF({
       orientation: "p",
       unit: "cm",
@@ -374,8 +554,10 @@ const ComponentsJamaah = () => {
 
     doc.setTextColor("#000000"); // Mengatur warna teks menjadi hitam
     doc.setFontSize(6); // Mengatur ukuran font menjadi 12
-    doc.text(pilgrims[id].name, centerX, 5, { align: "center" });
-    doc.text(pilgrims[id].portion_number, centerX, 5.28, { align: "center" });
+    doc.text(selectedPilgrim.name, centerX, 5, { align: "center" });
+    doc.text(selectedPilgrim.portion_number, centerX, 5.28, {
+      align: "center",
+    });
 
     var opts: QRCode.QRCodeToDataURLOptions = {
       errorCorrectionLevel: "H",
@@ -384,7 +566,7 @@ const ComponentsJamaah = () => {
     };
 
     const qrCodeDataURL = await QRCode.toDataURL(
-      `${Backend_URL}/pilgrim/${pilgrims[id].id}`,
+      `${Backend_URL}/pilgrim/${selectedPilgrim.id}`,
       opts
     );
     const qrCodeImg = new Image();
@@ -417,22 +599,32 @@ const ComponentsJamaah = () => {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => editUser()}
+                onClick={() => importExcel()}
               >
-                <IconUserPlus className="ltr:mr-2 rtl:ml-2" />
-                Tambahkan Jamaah
+                <IconDownload className="ltr:mr-2 rtl:ml-2" />
+                Impor Jamaah
               </button>
             </div>
             <div>
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => downloadAllPilgrim()}
+                onClick={() => editUser()}
               >
-                <IconPrinter className="ltr:mr-2 rtl:ml-2" />
-                Cetak Semua Jamaah
+                <IconUserPlus className="ltr:mr-2 rtl:ml-2" />
+                Tambah Jamaah
               </button>
             </div>
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => downloadAllPilgrim()}
+            >
+              <IconPrinter className="ltr:mr-2 rtl:ml-2" />
+              Cetak Semua Jamaah
+            </button>
           </div>
           <div className="relative">
             <input
@@ -453,7 +645,7 @@ const ComponentsJamaah = () => {
       </div>
       <div className="panel mt-5 overflow-hidden border-0 p-0">
         <div className="table-responsive">
-          <table className="table-striped table-hover">
+          {/* <table className="table-striped table-hover">
             <thead>
               <tr>
                 <th>No. Porsi</th>
@@ -517,7 +709,113 @@ const ComponentsJamaah = () => {
                 );
               })}
             </tbody>
-          </table>
+          </table> */}
+          <div className="datatables pagination-padding">
+            <DataTable
+              className="table-hover whitespace-nowrap"
+              records={records}
+              columns={[
+                {
+                  title: "Nomor porsi",
+                  accessor: "portion_number",
+                  sortable: true,
+                  render: ({ portion_number, id }) => (
+                    <div>{portion_number}</div>
+                  ),
+                },
+                {
+                  title: "Nama",
+                  accessor: "name",
+                  sortable: true,
+                  render: ({ name }) => <div>{name}</div>,
+                },
+                {
+                  title: "Jenis Kelamin",
+                  accessor: "gender",
+                  sortable: true,
+                  render: ({ gender }) => (
+                    <div>{gender == "M" ? "Laki-Laki" : "Perempuan"}</div>
+                  ),
+                },
+                {
+                  title: "Tanggal Lahir",
+                  accessor: "birth_date",
+                  sortable: true,
+                  render: ({ birth_date }) => (
+                    <div>{formatDate(birth_date)}</div>
+                  ),
+                },
+                {
+                  title: "Nomor Telepon",
+                  accessor: "phone_number",
+                  sortable: false,
+                  render: ({ phone_number }) => <div>{phone_number}</div>,
+                },
+                {
+                  title: "Rombongan",
+                  accessor: "group",
+                  sortable: true,
+                  render: ({ group }) => <div>{group}</div>,
+                },
+                {
+                  title: "Kloter",
+                  accessor: "cloter",
+                  sortable: true,
+                  render: ({ cloter }) => <div>{cloter}</div>,
+                },
+                {
+                  title: "Nomor Passport",
+                  accessor: "passport_number",
+                  sortable: true,
+                  render: ({ passport_number }) => <div>{passport_number}</div>,
+                },
+                {
+                  accessor: "action",
+                  title: "Actions",
+                  sortable: false,
+                  textAlignment: "center",
+                  render: ({ id, portion_number }) => (
+                    <div className="flex items-center justify-center gap-4">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => editUser(id)}
+                      >
+                        Ubah
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => deleteUser(portion_number)}
+                      >
+                        Hapus
+                      </button>
+                      <button
+                        className="border border-green-500 rounded-md py-1 px-2 text-green-500 hover:bg-green-500 hover:text-white"
+                        onClick={() => downloadPDF(id)}
+                      >
+                        Unduh
+                      </button>
+                    </div>
+                  ),
+                },
+              ]}
+              highlightOnHover
+              totalRecords={initialRecords.length}
+              recordsPerPage={pageSize}
+              page={page}
+              onPageChange={(p) => setPage(p)}
+              recordsPerPageOptions={PAGE_SIZES}
+              onRecordsPerPageChange={setPageSize}
+              sortStatus={sortStatus}
+              onSortStatusChange={setSortStatus}
+              selectedRecords={selectedRecords}
+              onSelectedRecordsChange={setSelectedRecords}
+              paginationText={({ from, to, totalRecords }) =>
+                `Showing  ${from} to ${to} of ${totalRecords} entries`
+              }
+            />
+          </div>
         </div>
       </div>
 
@@ -609,7 +907,11 @@ const ComponentsJamaah = () => {
                             dateFormat: "d-m-Y",
                             position: "auto left",
                             defaultDate: new Date(1990, 0, 1),
-                            maxDate: new Date(new Date().setFullYear(new Date().getFullYear() - 2)),
+                            maxDate: new Date(
+                              new Date().setFullYear(
+                                new Date().getFullYear() - 2
+                              )
+                            ),
                           }}
                           placeholder="Pilih Tanggal Lahir"
                           className="form-input"
@@ -674,6 +976,132 @@ const ComponentsJamaah = () => {
                           onClick={saveUser}
                         >
                           {params.id ? "Update" : "Add"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+      {/* Excel */}
+      <Transition appear show={importPilgrimModal} as={Fragment}>
+        <Dialog
+          as="div"
+          open={importPilgrimModal}
+          onClose={() => setImportPilgrimModal(false)}
+          className="relative z-50"
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-[black]/60" />
+          </Transition.Child>
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center px-4 py-8">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="panel w-full max-w-lg overflow-hidden rounded-lg border-0 p-0 text-black dark:text-white-dark">
+                  <button
+                    type="button"
+                    onClick={() => setImportPilgrimModal(false)}
+                    className="absolute top-4 text-gray-400 outline-none hover:text-gray-800 ltr:right-4 rtl:left-4 dark:hover:text-gray-600"
+                  >
+                    <IconX />
+                  </button>
+                  <div className="bg-[#fbfbfb] py-3 text-lg font-medium ltr:pl-5 ltr:pr-[50px] rtl:pl-[50px] rtl:pr-5 dark:bg-[#121c2c]">
+                    Impor Jamaah dari Excel
+                  </div>
+                  <div className="p-5">
+                    <form>
+                      {isPreview ? (
+                        <pre className="max-h-64 overflow-y-auto">
+                          {previewJsonData}
+                        </pre>
+                      ) : (
+                        <div className="flex items-center justify-center w-full">
+                          <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <svg
+                                className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
+                                aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 20 16"
+                              >
+                                <path
+                                  stroke="currentColor"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                                />
+                              </svg>
+                              <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                                <span className="font-semibold">
+                                  Click to upload
+                                </span>{" "}
+                                or drag and drop
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Only Excel Files (.xlsx)
+                              </p>
+                            </div>
+                            <input
+                              id="dropzone-file"
+                              type="file"
+                              className="hidden"
+                              accept=".xls,.xlsx"
+                              onChange={handleFileChange}
+                            />
+                          </label>
+                        </div>
+                      )}
+                      {file && (
+                        <div className="mt-2 relative">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Name: {file.name}
+                            <br />
+                            Size: {(file.size / 1024).toFixed(2)} KB
+                          </p>
+                          <button
+                            type="button"
+                            onClick={handleRemoveFile}
+                            className="absolute top-0 right-0 m-2 text-gray-400 outline-none hover:text-gray-800 dark:hover:text-gray-600"
+                          >
+                            <IconX />
+                          </button>
+                        </div>
+                      )}
+                      <div className="mt-8 flex items-center justify-end">
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary"
+                          onClick={() => previewData()}
+                        >
+                          {isPreview ? "Stop Preview" : "Preview"}
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary ltr:ml-4 rtl:mr-4"
+                          onClick={saveMultiplePilgrim}
+                        >
+                          Tambahkan
                         </button>
                       </div>
                     </form>
