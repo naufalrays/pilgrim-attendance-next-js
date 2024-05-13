@@ -4,7 +4,7 @@ export interface TripResponseData {
   id: string;
   pic_id: number;
   name: string;
-  pic_name: string;
+  pic_names: string[];
   date: Date;
   meeting_point: string;
   stand_by: Date;

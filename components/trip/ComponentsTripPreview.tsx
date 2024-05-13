@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 
 interface TripResponseData {
-  pic_id: number;
+  pic_names?: string[];
   name: string;
   pic_name?: string;
   date: Date;
@@ -120,8 +120,9 @@ const ComponentsTripPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
             <div className="space-y-1 text-white-dark">
               <div>Pembimbing:</div>
               <div className="font-semibold text-black dark:text-white">
-                {tripData?.pic_name ? tripData.pic_name : "Belum ada pembimbing"}
-              </div>
+              {tripData?.pic_names && tripData.pic_names.length > 0
+                  ? tripData.pic_names.join(", ")
+                  : "Belum ada pembimbing"}              </div>
             </div>
           </div>
           <div className="flex flex-col justify-between gap-6 sm:flex-row lg:w-2/3">

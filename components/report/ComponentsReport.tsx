@@ -25,7 +25,7 @@ interface TripResponseData {
   id: number;
   pic_id: number;
   name: string;
-  pic_name?: string;
+  pic_names?: string[];
   date?: string;
   meeting_point: string;
   stand_by?: string;
@@ -326,14 +326,15 @@ const ComponentsReport = () => {
                             <div className="flex items-center">
                               Pembimbing :
                             </div>
-                            {trip?.pic_name ? (
-                              <div>{trip.pic_name}</div>
+                            {trip?.pic_names && trip.pic_names.length > 0 ? (
+                              <div>{trip.pic_names.join(", ")}</div>
                             ) : (
                               <div className="text-gray-500">
                                 Tidak ada Pembimbing
                               </div>
                             )}
                           </div>
+
                           <div className="mt-2 flex flex-wrap gap-4">
                             <div className="flex items-center">Berangkat :</div>
                             {trip.check_in.absent !== 0 && (

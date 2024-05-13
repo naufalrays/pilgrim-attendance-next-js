@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { tripService } from "@/app/(default)/trip/api/api";
 import { useSession } from "next-auth/react";
+import { MultiSelect } from "@mantine/core";
 
 interface Pilgrim {
   id?: string;
@@ -36,7 +37,7 @@ interface GuideData {
 }
 
 interface TripRequestData {
-  pic_id?: string;
+  pic_ids?: string[];
   name: string;
   date?: Date;
   meeting_point: string;
@@ -54,7 +55,7 @@ const ComponentsTripCreate = () => {
   const router = useRouter();
   const [pilgrimData, setPilgrimData] = useState<Pilgrim[]>([]);
   const [selectedPilgrim, setSelectedPilgrim] = useState<Pilgrim[]>([]);
-  const [guideData, setGuideData] = useState<GuideData[]>([]);
+  // const [guideData, setGuideData] = useState<GuideData[]>([]);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -235,7 +236,7 @@ const ComponentsTripCreate = () => {
     const parsedStartDate = startDate ? new Date(startDate) : undefined;
     const parsedEndDate = endDate ? new Date(endDate) : undefined;
     const tripRequestData: TripRequestData = {
-      ...(guide ? { pic_id: guide } : {}),
+      ...(pic ? { pic_ids: pic } : {}),
       name: eventName,
       date: parsedDate,
       meeting_point: meetingPoint,
@@ -275,6 +276,10 @@ const ComponentsTripCreate = () => {
     });
   };
 
+  // PIC
+  const [pic, setPic] = useState<string[]>([]);
+  const [guideData, setGuideData] = useState<GuideData[]>([]);
+
   return (
     <div>
       <div className="flex flex-col gap-2.5 xl:flex-row">
@@ -304,21 +309,26 @@ const ComponentsTripCreate = () => {
                   <label htmlFor="pic" className="mb-0 w-1/3 ltr:mr-2 rtl:ml-2">
                     Pembimbing
                   </label>
-                  <select
+                  <MultiSelect
                     id="pic"
                     name="pic"
-                    value={guide}
-                    className="form-select flex-1"
-                    onChange={(e) => setGuide(e.target.value)}
-                  >
-                    <option value="">Pilih Pembimbing</option>
-                    {guideData &&
-                      guideData.map((guide) => (
-                        <option key={guide.id} value={guide.id}>
-                          {guide.name}
-                        </option>
-                      ))}
-                  </select>
+                    onChange={(value) => setPic(value)}
+                    value={pic}
+                    className="flex-1 text-xs"
+                    size="md"
+                    radius="sm"
+                    placeholder="Pilih Pembimbing"
+                    style={{ fontSize: 10 }} // Ubah nilai fontSize sesuai kebutuhan
+                    data={
+                      guideData
+                        ? guideData.map((u) => ({
+                            value: String(u.id),
+                            label: u.name,
+                          }))
+                        : []
+                    }
+                    searchable
+                  />
                 </div>
 
                 <div className="mt-4 flex items-center">

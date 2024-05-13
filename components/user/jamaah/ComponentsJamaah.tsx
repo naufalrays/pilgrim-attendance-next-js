@@ -716,7 +716,7 @@ const ComponentsJamaah = () => {
               records={records}
               columns={[
                 {
-                  title: "Nomor porsi",
+                  title: "No. Porsi",
                   accessor: "portion_number",
                   sortable: true,
                   render: ({ portion_number, id }) => (
@@ -746,7 +746,7 @@ const ComponentsJamaah = () => {
                   ),
                 },
                 {
-                  title: "Nomor Telepon",
+                  title: "No. Telepon",
                   accessor: "phone_number",
                   sortable: false,
                   render: ({ phone_number }) => <div>{phone_number}</div>,
@@ -764,7 +764,7 @@ const ComponentsJamaah = () => {
                   render: ({ cloter }) => <div>{cloter}</div>,
                 },
                 {
-                  title: "Nomor Passport",
+                  title: "No. Passport",
                   accessor: "passport_number",
                   sortable: true,
                   render: ({ passport_number }) => <div>{passport_number}</div>,

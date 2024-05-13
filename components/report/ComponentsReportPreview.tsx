@@ -282,8 +282,8 @@ const ComponentsReportPreview: React.FC<{ tripId: string }> = ({ tripId }) => {
             <div className="space-y-1 text-white-dark">
               <div>Pemandu:</div>
               <div className="font-semibold text-black dark:text-white">
-                {tripData?.pic_name
-                  ? tripData.pic_name
+                {tripData?.pic_names && tripData.pic_names.length > 0
+                  ? tripData.pic_names.join(", ")
                   : "Belum ada pembimbing"}
               </div>
             </div>
