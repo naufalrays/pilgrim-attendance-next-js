@@ -490,16 +490,20 @@ const ComponentsJamaah = () => {
 
     // Nama Jamaah
     doc.setTextColor("#000000"); // Mengatur warna teks menjadi hitam
-    doc.setFontSize(6); // Mengatur ukuran font menjadi 12
-    doc.text(pilgrim.name, centerX, y + 5, { align: "center" });
+    doc.setFontSize(7); // Mengatur ukuran font menjadi 12
+    doc.text(pilgrim.name, centerX, y + 4.95, { align: "center" });
 
     // Nomor Porsi Jamaah
-    doc.text(pilgrim.portion_number, centerX, y + 5.28, { align: "center" });
+    doc.text(pilgrim.passport_number, centerX, y + 5.28, { align: "center" });
+    // Rombongan
+    doc.text(pilgrim.group,  centerX, y + 7.2, {
+      align: "center",
+    });
 
     // QR Code
     doc.setTextColor("#ffffff"); // Mengatur warna teks menjadi putih
     doc.setFontSize(3.6); // Mengatur ukuran font menjadi 12
-    doc.addImage(qrCodeDataURL, "JPEG", centerX - 0.7, y + 5.4, 1.4, 1.4);
+    doc.addImage(qrCodeDataURL, "JPEG", centerX - 0.7, y + 5.4, 1.35, 1.35);
 
     // Alamat
     doc.text(
@@ -553,9 +557,12 @@ const ComponentsJamaah = () => {
     doc.text("KBIHU TARBIS", centerX, 0.6, { align: "center" });
 
     doc.setTextColor("#000000"); // Mengatur warna teks menjadi hitam
-    doc.setFontSize(6); // Mengatur ukuran font menjadi 12
-    doc.text(selectedPilgrim.name, centerX, 5, { align: "center" });
-    doc.text(selectedPilgrim.portion_number, centerX, 5.28, {
+    doc.setFontSize(7); // Mengatur ukuran font menjadi 12
+    doc.text(selectedPilgrim.name, centerX, 4.95, { align: "center" });
+    doc.text(selectedPilgrim.passport_number,  centerX, 5.28, {
+      align: "center",
+    });
+    doc.text(selectedPilgrim.group,  centerX, 7.2, {
       align: "center",
     });
 
@@ -574,7 +581,7 @@ const ComponentsJamaah = () => {
 
     doc.setTextColor("#ffffff"); // Mengatur warna teks menjadi putih
     doc.setFontSize(3.6); // Mengatur ukuran font menjadi 12
-    doc.addImage(qrCodeDataURL, "JPEG", centerX - 0.7, 5.4, 1.4, 1.4);
+    doc.addImage(qrCodeDataURL, "JPEG", centerX - 0.7, 5.4, 1.35, 1.35);
     doc.text(
       "Jl. Raya Jagakarsa Jl. H. Sa Amah No.45 7, RT.7/RW.4, Jagakarsa, \nKec. Jagakarsa, Kota Jakarta Selatan, DKI Jakarta 12620",
       centerX,
