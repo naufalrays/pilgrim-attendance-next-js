@@ -18,6 +18,7 @@ import IconMinus from "../icon/IconMinus";
 import IconMenuCharts from "../icon/menu/IconMenuCharts";
 import IconMail from "../icon/IconMail";
 import IconMenuMailbox from "../icon/menu/IconMenuMailbox";
+import IconMenuPages from "../icon/menu/IconMenuRestore";
 const Sidebar = () => {
   const dispatch = useDispatch();
   const pathname = usePathname();
@@ -208,6 +209,26 @@ const Sidebar = () => {
                         <IconMenuCharts className="shrink-0 group-hover:!text-primary" />
                         <span className="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">
                         Kegiatan
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                  <h2 className="-mx-4 mb-1 flex items-center bg-white-light/30 px-7 py-3 font-extrabold uppercase dark:bg-dark dark:bg-opacity-[0.08]">
+                    <IconMinus className="hidden h-5 w-4 flex-none" />
+                    <span>Manajemen Data</span>
+                  </h2>
+                  <li className="menu nav-item">
+                    <Link
+                      href="/backup"
+                      className={`group ${
+                        currentMenu !== "backup" ? "active" : ""
+                      }`}
+                      onClick={() => setCurrentMenu("backup")}
+                    >
+                      <div className="flex items-center">
+                        <IconMenuPages className="shrink-0 group-hover:!text-primary" />
+                        <span className="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">
+                        Cadangkan & Pulihkan
                         </span>
                       </div>
                     </Link>

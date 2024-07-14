@@ -12,9 +12,10 @@ import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { accountService } from "@/app/(default)/user/account/api/api";
 import Link from "next/link";
+import cuid from "cuid";
 
 interface Account {
-  id: number;
+  id: string;
   name: string;
   username: string;
   password: string;
@@ -95,6 +96,14 @@ const ComponentsAccount = () => {
       showMessage("Username diperlukan.", "error");
       return true;
     }
+    if (params.name.length < 3) {
+      showMessage("Nama harus lebih dari 3 karakter.", "error");
+      return true;
+    }
+    if (params.username.length < 6) {
+      showMessage("Username harus lebih dari 6 karakter.", "error");
+      return true;
+    }
     if (!params.password) {
       showMessage("Password diperlukan.", "error");
       return true;
@@ -128,16 +137,9 @@ const ComponentsAccount = () => {
       }
     } else {
       //add user
-      let maxUserId = filteredItems.length
-        ? filteredItems.reduce(
-            (max: any, character: any) =>
-              character.id > max ? character.id : max,
-            filteredItems[0].id
-          )
-        : 0;
-
+      const cuidId = cuid();
       let user = {
-        id: maxUserId + 1,
+        id: cuidId,
         name: params.name,
         username: params.username,
         phone_number: params.phone_number,
@@ -166,7 +168,7 @@ const ComponentsAccount = () => {
     setAddContactModal(true);
   };
 
-  const deleteUser = async (id: number) => {
+  const deleteUser = async (id: string) => {
     if (window.confirm("Apakah kamu yakin ingin menghapus datanya ?")) {
       if (id) {
         try {
@@ -281,9 +283,9 @@ const ComponentsAccount = () => {
                           </button>
                           <button
                             className="border border-green-500 rounded-md py-1 px-2 text-green-500 hover:bg-green-500 hover:text-white"
-                            onClick={() => openWhatsAppChat(
-                              account.phone_number ?? "-"
-                            )}
+                            onClick={() =>
+                              openWhatsAppChat(account.phone_number ?? "-")
+                            }
                           >
                             Whatsapp
                           </button>
