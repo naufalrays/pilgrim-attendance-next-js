@@ -62,6 +62,8 @@ interface Pilgrim {
 }
 
 const ComponentsReport = () => {
+  const { data } = useSession();
+
   const router = useRouter();
 
   const defaultParams = {
@@ -86,7 +88,6 @@ const ComponentsReport = () => {
   );
   const [selectedTab, setSelectedTab] = useState<any>("all");
 
-  const { data } = useSession();
   const [token, setToken] = useState("");
   const [listTrips, setListTrips] = useState<TripResponseData[]>([]);
   useEffect(() => {

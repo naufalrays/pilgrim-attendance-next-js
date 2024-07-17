@@ -1,136 +1,120 @@
+import axiosInstance from "@/app/api/axios";
 import { Backend_URL } from "@/lib/Constants";
 
 export const tripService = {
   fetchTripData: async (token: string) => {
-    const response = await fetch(`${Backend_URL}/trip`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error("Failed to fetch data");
-    }
-    const responseData = await response.json();
-    return responseData.data;
-  },
-
-  fetchGuideData: async (token: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/user?role=user`, {
+      const response = await axiosInstance.get('/trip', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch user data");
-      }
-      const responseData = await response.json();
-      return responseData.data;
+      return response.data.data;
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.error("Error fetching trip data:", error);
+      throw error;
+    }
+  },
+
+  fetchGuideData: async (token: string) => {
+    try {
+      const response = await axiosInstance.get('/user', {
+        params: {
+          role: 'user'
+        },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching guide data:", error);
       throw error;
     }
   },
 
   fetchPilgrimData: async (token: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/pilgrim`, {
+      const response = await axiosInstance.get('/pilgrim', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      const responseData = await response.json();
-      const pilgrimData = responseData.data;
-      return pilgrimData;
+      return response.data.data;
     } catch (error) {
-      console.error("Error fetching trip data:", error);
+      console.error("Error fetching pilgrim data:", error);
       throw error;
     }
   },
 
   fetchTripDataById: async (tripId: string, token: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/trip/id/${tripId}`, {
+      const response = await axiosInstance.get(`/trip/id/${tripId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      const responseData = await response.json();
-      const tripData = responseData.data;
-      return tripData;
+      return response.data.data;
     } catch (error) {
-      console.error("Error fetching trip data:", error);
+      console.error("Error fetching trip data by ID:", error);
       throw error;
     }
   },
 
   deleteTrip: async (id: any, token: string) => {
-    const response = await fetch(`${Backend_URL}/trip/id/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error("Gagal menghapus data");
+    try {
+      const response = await axiosInstance.delete(`/trip/id/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+      throw error;
     }
   },
 
   updateTrip: async (tripId: string, data: any, token: string) => {
-    const response = await fetch(`${Backend_URL}/trip/id/${tripId}`, {
-      method: "PATCH",
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error("Gagal memperbaharui data");
-    }
-  },
-
-  createTrip: async (data: any, token: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/trip`, {
-        method: "POST",
-        body: JSON.stringify(data),
+      const response = await axiosInstance.patch(`/trip/id/${tripId}`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Gagal memperbaharui data");
-      }
+      return response.data.data;
     } catch (error) {
-      throw new Error("Gagal memperbaharui data");
+      console.error("Error updating trip:", error);
+      throw error;
     }
   },
 
+  createTrip: async (data: any, token: string) => {
+    try {
+      const response = await axiosInstance.post('/trip', data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error creating trip:", error);
+      throw error;
+    }
+  },
 
   fetchBusDataById: async (tripId: string, token: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/trip/bus/${tripId}`, {
+      const response = await axiosInstance.get(`/trip/bus/${tripId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      const responseData = await response.json();
-      const tripData = responseData.data;
-      return tripData;
+      return response.data.data;
     } catch (error) {
-      console.error("Error fetching trip data:", error);
+      console.error("Error fetching bus data:", error);
       throw error;
     }
   },

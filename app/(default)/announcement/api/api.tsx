@@ -1,85 +1,60 @@
-import { RequestUpdateAttendancePilgrim } from "@/interfaces/reports/types";
+import axiosInstance from "@/app/api/axios";
 import { Backend_URL } from "@/lib/Constants";
 
 export const announcementService = {
-
   fetchAllUser: async (token: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/user`, {
-        method: "GET",
+      const response = await axiosInstance.get('/user', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      const responseData = await response.json();
-      return responseData.data;
+      return response.data.data;
     } catch (error) {
-      console.error("Error fetching trip data:", error);
+      console.error("Error fetching user data:", error);
       throw error;
     }
   },
-
 
   fetchAllMessage: async (token: string, senderId: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/announcement/sender/${senderId}`, {
-        method: "GET",
+      const response = await axiosInstance.get(`/announcement/sender/${senderId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      const responseData = await response.json();
-      return responseData.data;
+      return response.data.data;
     } catch (error) {
-      console.error("Error fetching trip data:", error);
+      console.error("Error fetching message data:", error);
       throw error;
     }
   },
-
 
   deleteMessage: async (token: string, messageId: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/announcement/${messageId}`, {
-        method: "DELETE",
+      const response = await axiosInstance.delete(`/announcement/${messageId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      const responseData = await response.json();
-      return responseData.data;
+      return response.data.data;
     } catch (error) {
-      console.error("Error fetching trip data:", error);
+      console.error("Error deleting message:", error);
       throw error;
     }
   },
 
-
-  sendMessage: async (token: string, data : RequestSendMessage) => {
+  sendMessage: async (token: string, data: RequestSendMessage) => {
     try {
-      const response = await fetch(`${Backend_URL}/announcement/message`, {
-        method: "POST",
+      const response = await axiosInstance.post('/announcement/message', data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(data)
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      const responseData = await response.json();
-      return responseData.data;
+      return response.data.data;
     } catch (error) {
-      console.error("Error fetching trip data:", error);
+      console.error("Error sending message:", error);
       throw error;
     }
   },

@@ -92,16 +92,16 @@ const ComponentsAccount = () => {
       showMessage("Nama diperlukan.", "error");
       return true;
     }
-    if (!params.username) {
-      showMessage("Username diperlukan.", "error");
-      return true;
-    }
     if (params.name.length < 3) {
       showMessage("Nama harus lebih dari 3 karakter.", "error");
       return true;
     }
     if (params.username.length < 6) {
       showMessage("Username harus lebih dari 6 karakter.", "error");
+      return true;
+    }
+    if (!params.username) {
+      showMessage("Username diperlukan.", "error");
       return true;
     }
     if (!params.password) {

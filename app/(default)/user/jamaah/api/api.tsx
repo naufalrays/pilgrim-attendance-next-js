@@ -1,134 +1,116 @@
-import { Pilgrim } from "@/interfaces/reports/types";
-import { Backend_URL } from "@/lib/Constants";
+import axiosInstance from "@/app/api/axios";
 
 export const jamaahService = {
-
   fetchJamaahData: async (token: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/pilgrim`, {
+      const response = await axiosInstance.get('/pilgrim', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      const responseData = await response.json();
-      return responseData.data;
+      console.log(response.data)
+      return response.data.data;
     } catch (error) {
       console.error("Error fetching trip data:", error);
       throw error;
     }
   },
 
-  fetchJamaahById: async (id:string, token: string) => {
+  fetchJamaahById: async (id: string, token: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/pilgrim/${id}`, {
+      const response = await axiosInstance.get(`/pilgrim/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      const responseData = await response.json();
-      return responseData.data;
+      return response.data.data;
     } catch (error) {
       console.error("Error fetching trip data:", error);
       throw error;
     }
   },
 
-  fetchJamaahByPortionNumber: async (portionNumber:string, token: string) => {
+  fetchJamaahByPortionNumber: async (portionNumber: string, token: string) => {
     try {
-      const response = await fetch(`${Backend_URL}/pilgrim/byPortion/${portionNumber}`, {
+      const response = await axiosInstance.get(`/pilgrim/byPortion/${portionNumber}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        throw new Error("Failed to fetch data");
-      }
-      const responseData = await response.json();
-      return responseData.data;
+      return response.data.data;
     } catch (error) {
       console.error("Error fetching trip data:", error);
       throw error;
     }
   },
 
-
-   createJamaah : async (body: any, token: string) => {
-    const response = await fetch(`${Backend_URL}/pilgrim`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-
-      },
-    });
-    if (!response.ok) {
-      throw new Error("Gagal menambahkan data");
+  createJamaah: async (body: any, token: string) => {
+    try {
+      const response = await axiosInstance.post('/pilgrim', body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error creating jamaah:", error);
+      throw error;
     }
   },
 
-
-  createMultipleJamaah : async (body: any, token: string) => {
-    const response = await fetch(`${Backend_URL}/pilgrim/many`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-
-      },
-    });
-    if (response.status === 409) {
-      throw new Error("Ada jamaah yang sudah terdaftar");
-  }
-    if (!response.ok) {
-      throw new Error("Gagal menambahkan data");
+  createMultipleJamaah: async (body: any, token: string) => {
+    try {
+      const response = await axiosInstance.post('/pilgrim/many', body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error creating multiple jamaah:", error);
+      throw error;
     }
   },
 
   updateJamaah: async (id: any, body: any, token: string) => {
-    const response = await fetch(`${Backend_URL}/pilgrim/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error("Gagal menghapus data");
+    try {
+      const response = await axiosInstance.patch(`/pilgrim/${id}`, body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error updating jamaah:", error);
+      throw error;
     }
   },
 
   deleteJamaahById: async (id: any, token: string) => {
-    const response = await fetch(`${Backend_URL}/pilgrim/byId/${id}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error("Gagal menghapus data");
+    try {
+      const response = await axiosInstance.delete(`/pilgrim/byId/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error deleting jamaah by id:", error);
+      throw error;
     }
   },
 
   deleteJamaahByPortionNumber: async (portion_number: any, token: string) => {
-    const response = await fetch(`${Backend_URL}/pilgrim/byPortionNumber/${portion_number}`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error("Gagal menghapus data");
+    try {
+      const response = await axiosInstance.delete(`/pilgrim/byPortionNumber/${portion_number}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data.data;
+    } catch (error) {
+      console.error("Error deleting jamaah by portion number:", error);
+      throw error;
     }
   },
 };
